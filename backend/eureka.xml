@@ -1,0 +1,117 @@
+<applications>
+  <versions__delta>1</versions__delta>
+  <apps__hashcode>UP_3_</apps__hashcode>
+  <application>
+    <name>API-GATEWAY</name>
+    <instance>
+      <instanceId>localhost:api-gateway:8081</instanceId>
+      <hostName>192.168.66.1</hostName>
+      <app>API-GATEWAY</app>
+      <ipAddr>192.168.66.1</ipAddr>
+      <status>UP</status>
+      <overriddenstatus>UNKNOWN</overriddenstatus>
+      <port enabled="true">8081</port>
+      <securePort enabled="false">443</securePort>
+      <countryId>1</countryId>
+      <dataCenterInfo class="com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo">
+        <name>MyOwn</name>
+      </dataCenterInfo>
+      <leaseInfo>
+        <renewalIntervalInSecs>30</renewalIntervalInSecs>
+        <durationInSecs>90</durationInSecs>
+        <registrationTimestamp>1774736197169</registrationTimestamp>
+        <lastRenewalTimestamp>1774736437231</lastRenewalTimestamp>
+        <evictionTimestamp>0</evictionTimestamp>
+        <serviceUpTimestamp>1774733922991</serviceUpTimestamp>
+      </leaseInfo>
+      <metadata>
+        <management.port>8081</management.port>
+      </metadata>
+      <homePageUrl>http://192.168.66.1:8081/</homePageUrl>
+      <statusPageUrl>http://192.168.66.1:8081/actuator/info</statusPageUrl>
+      <healthCheckUrl>http://192.168.66.1:8081/actuator/health</healthCheckUrl>
+      <vipAddress>api-gateway</vipAddress>
+      <secureVipAddress>api-gateway</secureVipAddress>
+      <isCoordinatingDiscoveryServer>false</isCoordinatingDiscoveryServer>
+      <lastUpdatedTimestamp>1774736197169</lastUpdatedTimestamp>
+      <lastDirtyTimestamp>1774736197031</lastDirtyTimestamp>
+      <actionType>ADDED</actionType>
+    </instance>
+  </application>
+  <application>
+    <name>NETTOYAGE_MAINTENANCE_SERVICE</name>
+    <instance>
+      <instanceId>localhost:nettoyage_maintenance_service:8085</instanceId>
+      <hostName>192.168.66.1</hostName>
+      <app>NETTOYAGE_MAINTENANCE_SERVICE</app>
+      <ipAddr>192.168.66.1</ipAddr>
+      <status>UP</status>
+      <overriddenstatus>UNKNOWN</overriddenstatus>
+      <port enabled="true">8085</port>
+      <securePort enabled="false">443</securePort>
+      <countryId>1</countryId>
+      <dataCenterInfo class="com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo">
+        <name>MyOwn</name>
+      </dataCenterInfo>
+      <leaseInfo>
+        <renewalIntervalInSecs>30</renewalIntervalInSecs>
+        <durationInSecs>90</durationInSecs>
+        <registrationTimestamp>1774736174585</registrationTimestamp>
+        <lastRenewalTimestamp>1774736444662</lastRenewalTimestamp>
+        <evictionTimestamp>0</evictionTimestamp>
+        <serviceUpTimestamp>1774733774781</serviceUpTimestamp>
+      </leaseInfo>
+      <metadata>
+        <management.port>8085</management.port>
+      </metadata>
+      <homePageUrl>http://192.168.66.1:8085/</homePageUrl>
+      <statusPageUrl>http://192.168.66.1:8085/nettoyage_maintenance/api/actuator/info</statusPageUrl>
+      <healthCheckUrl>http://192.168.66.1:8085/nettoyage_maintenance/api/actuator/health</healthCheckUrl>
+      <vipAddress>nettoyage_maintenance_service</vipAddress>
+      <secureVipAddress>nettoyage_maintenance_service</secureVipAddress>
+      <isCoordinatingDiscoveryServer>false</isCoordinatingDiscoveryServer>
+      <lastUpdatedTimestamp>1774736174586</lastUpdatedTimestamp>
+      <lastDirtyTimestamp>1774736174473</lastDirtyTimestamp>
+      <actionType>ADDED</actionType>
+    </instance>
+  </application>
+  <application>
+    <name>UTILISATEURS_SERVICE</name>
+    <instance>
+      <instanceId>169.254.18.142:utilisateurs_service:8000</instanceId>
+      <hostName>169.254.18.142</hostName>
+      <app>UTILISATEURS_SERVICE</app>
+      <ipAddr>169.254.18.142</ipAddr>
+      <status>UP</status>
+      <overriddenstatus>UNKNOWN</overriddenstatus>
+      <port enabled="true">8000</port>
+      <securePort enabled="false">9443</securePort>
+      <countryId>1</countryId>
+      <dataCenterInfo class="com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo">
+        <name>MyOwn</name>
+      </dataCenterInfo>
+      <leaseInfo>
+        <renewalIntervalInSecs>30</renewalIntervalInSecs>
+        <durationInSecs>90</durationInSecs>
+        <registrationTimestamp>1774736351601</registrationTimestamp>
+        <lastRenewalTimestamp>1774736351601</lastRenewalTimestamp>
+        <evictionTimestamp>0</evictionTimestamp>
+        <serviceUpTimestamp>1774735612097</serviceUpTimestamp>
+      </leaseInfo>
+      <metadata>
+        <zone>default</zone>
+        <management.port>8000</management.port>
+      </metadata>
+      <homePageUrl>http://169.254.18.142:8000/</homePageUrl>
+      <statusPageUrl>http://169.254.18.142:8000/info</statusPageUrl>
+      <healthCheckUrl>http://169.254.18.142:8000/health</healthCheckUrl>
+      <secureHealthCheckUrl></secureHealthCheckUrl>
+      <vipAddress>utilisateurs_service</vipAddress>
+      <secureVipAddress>utilisateurs_service</secureVipAddress>
+      <isCoordinatingDiscoveryServer>false</isCoordinatingDiscoveryServer>
+      <lastUpdatedTimestamp>1774736351601</lastUpdatedTimestamp>
+      <lastDirtyTimestamp>1774736351083</lastDirtyTimestamp>
+      <actionType>ADDED</actionType>
+    </instance>
+  </application>
+</applications>
