@@ -15,8 +15,8 @@
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
         </processorPath>
-        <module name="Gestion_personnel" />
         <module name="Gestion_nettoyage_maintenance" />
+        <module name="Gestion_personnel" />
         <module name="API_Gateway" />
         <module name="Gestion_chambres" />
         <module name="Discovery" />

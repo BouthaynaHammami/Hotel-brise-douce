@@ -14,4 +14,7 @@ public interface NettoyageMaintenanceRepository extends JpaRepository<NettoyageM
     List<NettoyageMaintenance> findByStatus(StatusIntervention status);
 
     List<NettoyageMaintenance> findByTypeIntervention(TypeIntervention typeIntervention);
+
+    /** Used by personnel to view only their own assigned interventions */
+    List<NettoyageMaintenance> findByPersonnelId(Long personnelId);
 }

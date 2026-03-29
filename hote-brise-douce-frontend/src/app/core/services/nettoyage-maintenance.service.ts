@@ -1,50 +1,87 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { NettoyageMaintenance, StatusIntervention, TypeIntervention, UtilisateurDTO } from '../models/nettoyage-maintenance.model';
+import {
+  InterventionRequest,
+  InterventionResponse,
+  StatusIntervention,
+  TypeIntervention,
+  UtilisateurDTO
+} from '../models/nettoyage-maintenance.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NettoyageMaintenanceService {
+  /** Base URL — routed through the Spring Cloud API Gateway */
   private apiUrl = 'http://localhost:8081/nettoyage_maintenance/api/interventions';
   private http = inject(HttpClient);
 
-  getAll(): Observable<NettoyageMaintenance[]> {
-    return this.http.get<NettoyageMaintenance[]>(this.apiUrl);
+  // ─── ADMIN — CRUD ─────────────────────────────────────────────────────────
+
+  /** GET /interventions — all interventions (admin view) */
+  getAll(): Observable<InterventionResponse[]> {
+    return this.http.get<InterventionResponse[]>(this.apiUrl);
   }
 
-  getById(id: number): Observable<NettoyageMaintenance> {
-    return this.http.get<NettoyageMaintenance>(`${this.apiUrl}/${id}`);
+  /** GET /interventions/{id} */
+  getById(id: number): Observable<InterventionResponse> {
+    return this.http.get<InterventionResponse>(`${this.apiUrl}/${id}`);
   }
 
-  create(intervention: NettoyageMaintenance): Observable<NettoyageMaintenance> {
-    return this.http.post<NettoyageMaintenance>(this.apiUrl, intervention);
+  /** POST /interventions */
+  create(payload: InterventionRequest): Observable<InterventionResponse> {
+    return this.http.post<InterventionResponse>(this.apiUrl, payload);
   }
 
-  update(id: number, intervention: NettoyageMaintenance): Observable<NettoyageMaintenance> {
-    return this.http.put<NettoyageMaintenance>(`${this.apiUrl}/${id}`, intervention);
+  /** PUT /interventions/{id} — admin full-update */
+  update(id: number, payload: InterventionRequest): Observable<InterventionResponse> {
+    return this.http.put<InterventionResponse>(`${this.apiUrl}/${id}`, payload);
   }
 
+  /** DELETE /interventions/{id} */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  getByStatus(status: StatusIntervention): Observable<NettoyageMaintenance[]> {
-    return this.http.get<NettoyageMaintenance[]>(`${this.apiUrl}/status/${status}`);
+  /** GET /interventions/status/{status} */
+  getByStatus(status: StatusIntervention): Observable<InterventionResponse[]> {
+    return this.http.get<InterventionResponse[]>(`${this.apiUrl}/status/${status}`);
   }
 
-  getByType(type: TypeIntervention): Observable<NettoyageMaintenance[]> {
-    return this.http.get<NettoyageMaintenance[]>(`${this.apiUrl}/type/${type}`);
+  /** GET /interventions/type/{type} */
+  getByType(type: TypeIntervention): Observable<InterventionResponse[]> {
+    return this.http.get<InterventionResponse[]>(`${this.apiUrl}/type/${type}`);
   }
 
-  getAllPersonnel(token: string): Observable<UtilisateurDTO[]> {
-    const headers = new HttpHeaders().set('Authorization', token);
-    return this.http.get<UtilisateurDTO[]>(`${this.apiUrl}/personnel`, { headers });
+  // ─── PERSONNEL — own tasks + status update ────────────────────────────────
+
+  /** GET /interventions/personnel/{personnelId} — tasks assigned to this user */
+  getByPersonnelId(personnelId: number): Observable<InterventionResponse[]> {
+    return this.http.get<InterventionResponse[]>(`${this.apiUrl}/personnel/${personnelId}`);
   }
 
-  setPersonnelToIntervention(id: number, personnelId: number, token: string): Observable<NettoyageMaintenance> {
-    const headers = new HttpHeaders().set('Authorization', token);
-    return this.http.put<NettoyageMaintenance>(`${this.apiUrl}/${id}/personnel/${personnelId}`, {}, { headers });
+  /**
+   * PATCH /interventions/{id}/personnel/{personnelId}/status?newStatus=EN_COURS
+   * Personnel-only: update the status of one of their own interventions.
+   */
+  updateStatus(
+    id: number,
+    personnelId: number,
+    newStatus: StatusIntervention
+  ): Observable<InterventionResponse> {
+    const params = new HttpParams().set('newStatus', newStatus);
+    return this.http.patch<InterventionResponse>(
+      `${this.apiUrl}/${id}/personnel/${personnelId}/status`,
+      null,
+      { params }
+    );
+  }
+
+  // ─── ADMIN HELPERS ────────────────────────────────────────────────────────
+
+  /** GET /interventions/personnel — list of PERSONNEL users (for dropdowns) */
+  getAllPersonnel(): Observable<UtilisateurDTO[]> {
+    return this.http.get<UtilisateurDTO[]>(`${this.apiUrl}/personnel`);
   }
 }

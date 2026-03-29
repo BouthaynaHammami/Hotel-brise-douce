@@ -1,86 +1,139 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { NettoyageMaintenanceService } from '../../../core/services/nettoyage-maintenance.service';
+import { AuthService } from '../../../core/services/auth.service';
+import {
+  InterventionResponse,
+  Priorite,
+  StatusIntervention,
+  TypeIntervention
+} from '../../../core/models/nettoyage-maintenance.model';
 
-export interface Task {
-    id: string;
-    icon: string;
-    title: string;
-    room: string;
-    type: string;
-    assignedBy: string;
-    assignedAt: string;
-    description: string;
-    location: string;
-    deadline: string;
-    status: 'urgent' | 'cours' | 'attente' | 'done';
-    badge: string;
-    badgeClass: string;
-    opacity?: boolean;
-}
+@Component({
+  selector: 'app-personnel-tasks',
+  templateUrl: './personnel-tasks.component.html',
+  styleUrls: ['./personnel-tasks.component.css']
+})
+export class PersonnelTasksComponent implements OnInit {
 
-@Component({ selector: 'app-personnel-tasks', templateUrl: './personnel-tasks.component.html', styleUrls: ['./personnel-tasks.component.css'] })
-export class PersonnelTasksComponent {
-    filter: string = 'all';
-    modalOpen = false;
-    selectedTask: Task | null = null;
+  filter: StatusIntervention | 'all' = 'all';
+  modalOpen = false;
+  selectedTask: InterventionResponse | null = null;
 
-    stats = [
-        { value: '3', color: 'text-yellow-500', label: 'En attente' },
-        { value: '1', color: 'text-blue-500', label: 'En cours' },
-        { value: '5', color: 'text-green-500', label: 'Terminées aujourd\'hui' },
-        { value: '9', color: 'text-navy', label: 'Total ce mois' }
+  tasks: InterventionResponse[] = [];
+  loading = false;
+  error: string | null = null;
+
+  StatusIntervention = StatusIntervention;
+  Priorite = Priorite;
+
+  private cleaningService = inject(NettoyageMaintenanceService);
+  private authService = inject(AuthService);
+
+  get personnelId(): number | null {
+    const user = this.authService.getUserFromToken();
+    return user?.id ?? user?.idUtilisateur ?? null;
+  }
+
+  // ─── Computed stats ───────────────────────────────────────────────────────
+
+  get stats() {
+    const aFaire  = this.tasks.filter(t => t.status === StatusIntervention.A_FAIRE).length;
+    const enCours = this.tasks.filter(t => t.status === StatusIntervention.EN_COURS).length;
+    const termine = this.tasks.filter(t => t.status === StatusIntervention.TERMINE).length;
+    return [
+      { value: String(aFaire),  color: 'text-yellow-500', label: 'À faire' },
+      { value: String(enCours), color: 'text-blue-500',   label: 'En cours' },
+      { value: String(termine), color: 'text-green-500',  label: 'Terminées' },
+      { value: String(this.tasks.length), color: 'text-navy', label: 'Total assignées' }
     ];
+  }
 
-    tasks: Task[] = [
-        {
-            id: 't1', icon: '🔧', title: 'Maintenance — Chambre 202', room: '202', type: 'Maintenance',
-            assignedBy: 'Admin', assignedAt: '28/03 08:30',
-            description: 'Fuite d\'eau signalée dans la salle de bain. Vérifier la robinetterie et joints.',
-            location: 'Chambre 202, 2e étage', deadline: 'Avant 11h00',
-            status: 'urgent', badge: 'En attente', badgeClass: 'badge-yellow'
-        },
-        {
-            id: 't2', icon: '🧹', title: 'Nettoyage — Chambre 305', room: '305', type: 'Nettoyage',
-            assignedBy: 'Admin', assignedAt: '28/03 09:00',
-            description: 'Nettoyage complet suite au départ client. Changer literie et réapprovisionner minibar.',
-            location: 'Chambre 305, 3e étage', deadline: 'Avant 12h00',
-            status: 'cours', badge: 'En cours', badgeClass: 'badge-blue'
-        },
-        {
-            id: 't3', icon: '🧹', title: 'Nettoyage — Chambre 412', room: '412', type: 'Nettoyage',
-            assignedBy: 'Admin', assignedAt: '28/03 09:15',
-            description: 'Nettoyage standard avant arrivée client à 14h. Vérifier la terrasse.',
-            location: 'Chambre 412, 4e étage', deadline: 'Avant 13h30',
-            status: 'attente', badge: 'En attente', badgeClass: 'badge-yellow'
-        },
-        {
-            id: 't4', icon: '✅', title: 'Nettoyage — Chambre 103', room: '103', type: 'Nettoyage',
-            assignedBy: 'Admin', assignedAt: '28/03 07:00',
-            description: 'Nettoyage complet effectué. Literie changée, minibar réapprovisionné.',
-            location: 'Chambre 103, 1er étage', deadline: '08:45',
-            status: 'done', badge: 'Terminé ✓', badgeClass: 'badge-green', opacity: true
-        }
-    ];
+  get filteredTasks(): InterventionResponse[] {
+    if (this.filter === 'all') return this.tasks;
+    return this.tasks.filter(t => t.status === this.filter);
+  }
 
-    get filteredTasks(): Task[] {
-        if (this.filter === 'all') return this.tasks;
-        return this.tasks.filter(t => t.status === this.filter);
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
+
+  ngOnInit(): void {
+    this.loadTasks();
+  }
+
+  loadTasks(): void {
+    const id = this.personnelId;
+    if (!id) {
+      this.error = 'Impossible de récupérer votre identifiant. Veuillez vous reconnecter.';
+      return;
     }
+    this.loading = true;
+    this.error = null;
+    this.cleaningService.getByPersonnelId(id).subscribe({
+      next: (data) => { this.tasks = data; this.loading = false; },
+      error: (err) => {
+        console.error('Error fetching tasks', err);
+        this.error = 'Erreur lors du chargement des tâches.';
+        this.loading = false;
+      }
+    });
+  }
 
-    setFilter(f: string) { this.filter = f; }
+  // ─── Actions ──────────────────────────────────────────────────────────────
 
-    openModal(task: Task) {
-        this.selectedTask = task;
-        this.modalOpen = true;
-    }
+  setFilter(f: StatusIntervention | 'all') { this.filter = f; }
 
-    onStatusSaved(payload: { task: Task; status: string }) {
-        const t = this.tasks.find(x => x.id === payload.task.id);
-        if (!t) return;
-        if (payload.status === 'attente') { t.badge = 'En attente'; t.badgeClass = 'badge-yellow'; }
-        if (payload.status === 'cours') { t.badge = 'En cours'; t.badgeClass = 'badge-blue'; }
-        if (payload.status === 'termine') { t.badge = 'Terminé ✓'; t.badgeClass = 'badge-green'; }
+  openModal(task: InterventionResponse) {
+    this.selectedTask = task;
+    this.modalOpen = true;
+  }
+
+  onStatusSaved(payload: { task: InterventionResponse; newStatus: StatusIntervention }) {
+    const id = this.personnelId;
+    if (!id) return;
+
+    this.cleaningService.updateStatus(payload.task.idIntervention, id, payload.newStatus).subscribe({
+      next: (updated) => {
+        const idx = this.tasks.findIndex(t => t.idIntervention === updated.idIntervention);
+        if (idx !== -1) this.tasks[idx] = updated;
         this.modalOpen = false;
-    }
+      },
+      error: (err) => console.error('Error updating status', err)
+    });
+  }
 
-    onModalClosed() { this.modalOpen = false; }
+  onModalClosed() { this.modalOpen = false; }
+
+  // ─── Badge helpers ────────────────────────────────────────────────────────
+
+  getBadgeClass(status: StatusIntervention): string {
+    switch (status) {
+      case StatusIntervention.A_FAIRE:  return 'badge-yellow';
+      case StatusIntervention.EN_COURS: return 'badge-blue';
+      case StatusIntervention.TERMINE:  return 'badge-green';
+      default:                          return 'badge-gray';
+    }
+  }
+
+  getBadgeLabel(status: StatusIntervention): string {
+    switch (status) {
+      case StatusIntervention.A_FAIRE:  return 'À faire';
+      case StatusIntervention.EN_COURS: return 'En cours';
+      case StatusIntervention.TERMINE:  return 'Terminé ✓';
+      default:                          return status;
+    }
+  }
+
+  getPriorityBadgeClass(p: Priorite): string {
+    switch (p) {
+      case Priorite.URGENTE: return 'badge-red';
+      case Priorite.HAUTE:   return 'badge-orange';
+      case Priorite.NORMALE: return 'badge-yellow';
+      case Priorite.BASSE:   return 'badge-gray';
+      default:               return 'badge-gray';
+    }
+  }
+
+  getTaskIcon(type: TypeIntervention, status: StatusIntervention): string {
+    if (status === StatusIntervention.TERMINE) return '✅';
+    return type === TypeIntervention.MAINTENANCE ? '🔧' : '🧹';
+  }
 }

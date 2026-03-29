@@ -4,13 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.nettoyage_maintenance_service.entity.NettoyageMaintenance;
+import tn.esprit.nettoyage_maintenance_service.dto.InterventionRequestDTO;
+import tn.esprit.nettoyage_maintenance_service.dto.InterventionResponseDTO;
+import tn.esprit.nettoyage_maintenance_service.dto.UtilisateurDTO;
 import tn.esprit.nettoyage_maintenance_service.entity.StatusIntervention;
 import tn.esprit.nettoyage_maintenance_service.entity.TypeIntervention;
 import tn.esprit.nettoyage_maintenance_service.service.NettoyageMaintenanceService;
-import tn.esprit.nettoyage_maintenance_service.dto.UtilisateurDTO;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/interventions")
 @RequiredArgsConstructor
@@ -18,53 +20,100 @@ public class NettoyageMaintenanceController {
 
     private final NettoyageMaintenanceService service;
 
+    // ──────────────────────────────────────────────
+    // ADMIN — CRUD
+    // ──────────────────────────────────────────────
+
+    /** GET /interventions — list all interventions (admin view) */
     @GetMapping
-    public ResponseEntity<List<NettoyageMaintenance>> getAll() {
+    public ResponseEntity<List<InterventionResponseDTO>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
+    /** GET /interventions/{id} — get one intervention */
     @GetMapping("/{id}")
-    public ResponseEntity<NettoyageMaintenance> getById(@PathVariable Long id) {
+    public ResponseEntity<InterventionResponseDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
+    /**
+     * POST /interventions — create a new intervention.
+     * Body: InterventionRequestDTO — uses explicit DTO to avoid Jackson enum deserialization issues.
+     */
     @PostMapping
-    public ResponseEntity<NettoyageMaintenance> create(@RequestBody NettoyageMaintenance intervention) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(intervention));
+    public ResponseEntity<InterventionResponseDTO> create(@RequestBody InterventionRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(dto));
     }
 
+    /**
+     * PUT /interventions/{id} — admin full-update.
+     * Body: InterventionRequestDTO.
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<NettoyageMaintenance> update(@PathVariable Long id,
-                                                       @RequestBody NettoyageMaintenance intervention) {
-        return ResponseEntity.ok(service.update(id, intervention));
+    public ResponseEntity<InterventionResponseDTO> update(
+            @PathVariable Long id,
+            @RequestBody InterventionRequestDTO dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
+    /** DELETE /interventions/{id} */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
+    /** GET /interventions/status/{status} — filter by status */
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<NettoyageMaintenance>> getByStatus(@PathVariable StatusIntervention status) {
+    public ResponseEntity<List<InterventionResponseDTO>> getByStatus(
+            @PathVariable StatusIntervention status) {
         return ResponseEntity.ok(service.getByStatus(status));
     }
 
+    /** GET /interventions/type/{type} — filter by type */
     @GetMapping("/type/{type}")
-    public ResponseEntity<List<NettoyageMaintenance>> getByType(@PathVariable TypeIntervention type) {
+    public ResponseEntity<List<InterventionResponseDTO>> getByType(
+            @PathVariable TypeIntervention type) {
         return ResponseEntity.ok(service.getByType(type));
     }
 
-    @GetMapping("/personnel")
-    public ResponseEntity<List<UtilisateurDTO>> getAllPersonnel(@RequestHeader("Authorization") String token) {
-        return ResponseEntity.ok(service.getAllPersonnel(token));
+    // ──────────────────────────────────────────────
+    // PERSONNEL — own tasks + status update
+    // ──────────────────────────────────────────────
+
+    /**
+     * GET /interventions/personnel/{personnelId} — all interventions for a specific personnel.
+     * Used by the personnel portal so each member only sees their own tasks.
+     */
+    @GetMapping("/personnel/{personnelId}")
+    public ResponseEntity<List<InterventionResponseDTO>> getByPersonnel(
+            @PathVariable Long personnelId) {
+        return ResponseEntity.ok(service.getByPersonnelId(personnelId));
     }
 
-    @PutMapping("/{id}/personnel/{personnelId}")
-    public ResponseEntity<NettoyageMaintenance> setPersonnelToIntervention(
-            @PathVariable Long id, 
+    /**
+     * PATCH /interventions/{id}/personnel/{personnelId}/status?newStatus=EN_COURS
+     * Personnel-only endpoint: update the status of one of their own interventions.
+     * Prevents them from modifying any other field.
+     */
+    @PatchMapping("/{id}/personnel/{personnelId}/status")
+    public ResponseEntity<InterventionResponseDTO> updateStatus(
+            @PathVariable Long id,
             @PathVariable Long personnelId,
-            @RequestHeader("Authorization") String token) {
-        return ResponseEntity.ok(service.setPersonnelToIntervention(id, personnelId, token));
+            @RequestParam StatusIntervention newStatus) {
+        return ResponseEntity.ok(service.updateStatus(id, personnelId, newStatus));
+    }
+
+    // ──────────────────────────────────────────────
+    // ADMIN HELPERS
+    // ──────────────────────────────────────────────
+
+    /**
+     * GET /interventions/personnel — list of users with role PERSONNEL.
+     * Used by admin forms to populate the personnel dropdown.
+     */
+    @GetMapping("/personnel")
+    public ResponseEntity<List<UtilisateurDTO>> getAllPersonnel() {
+        return ResponseEntity.ok(service.getAllPersonnel());
     }
 }

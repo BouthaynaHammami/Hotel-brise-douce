@@ -24,6 +24,18 @@ public class NettoyageMaintenance {
     @Column(length = 500)
     private String description;
 
+    /** Static room number — Chambres microservice not yet connected */
+    private Integer chambreNumero;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Priorite priorite = Priorite.NORMALE;
+
+    /** Free-text note from admin */
+    @Column(length = 1000)
+    private String note;
+
     private LocalDate datePlanification;
 
     private LocalDate dateDebut;
@@ -32,7 +44,9 @@ public class NettoyageMaintenance {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StatusIntervention status;
+    @Builder.Default
+    private StatusIntervention status = StatusIntervention.A_FAIRE;
 
+    /** FK to UTILISATEURS-SERVICE */
     private Long personnelId;
 }

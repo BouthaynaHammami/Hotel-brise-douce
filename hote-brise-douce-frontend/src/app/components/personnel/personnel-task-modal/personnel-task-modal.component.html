@@ -6,25 +6,25 @@
         </div>
         <div class="bg-blue-50 rounded-xl p-4 mb-5">
             <p class="text-xs text-gray-500">Chambre</p>
-            <p class="font-semibold" style="color:var(--navy)">Chambre {{ task.room }}</p>
-            <p class="text-xs text-gray-500 mt-1">Type : {{ task.type }}</p>
+            <p class="font-semibold" style="color:var(--navy)">Chambre {{ task.chambreNumero ?? '?' }}</p>
+            <p class="text-xs text-gray-500 mt-1">Type : {{ task.typeIntervention }}</p>
         </div>
         <div class="mb-5">
             <label class="block text-xs text-gray-500 tracking-widest uppercase mb-3">Nouveau statut</label>
             <div class="space-y-3">
                 <label
                     class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-yellow-400 hover:bg-yellow-50 transition-colors">
-                    <input type="radio" name="status" value="attente" [(ngModel)]="selectedStatus" />
-                    <span class="text-sm">⏳ En attente</span>
+                    <input type="radio" name="status" [value]="StatusIntervention.A_FAIRE" [(ngModel)]="selectedStatus" />
+                    <span class="text-sm">⏳ À faire</span>
                 </label>
                 <label
                     class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
-                    <input type="radio" name="status" value="cours" [(ngModel)]="selectedStatus" />
+                    <input type="radio" name="status" [value]="StatusIntervention.EN_COURS" [(ngModel)]="selectedStatus" />
                     <span class="text-sm">🔄 En cours</span>
                 </label>
                 <label
                     class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-green-400 hover:bg-green-50 transition-colors">
-                    <input type="radio" name="status" value="termine" [(ngModel)]="selectedStatus" />
+                    <input type="radio" name="status" [value]="StatusIntervention.TERMINE" [(ngModel)]="selectedStatus" />
                     <span class="text-sm">✅ Terminé</span>
                 </label>
             </div>

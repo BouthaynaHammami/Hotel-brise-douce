@@ -1,19 +1,21 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Task } from '../personnel-tasks/personnel-tasks.component';
+import { InterventionResponse, StatusIntervention } from '../../../core/models/nettoyage-maintenance.model';
 
 @Component({ selector: 'app-personnel-task-modal', templateUrl: './personnel-task-modal.component.html', styleUrls: ['./personnel-task-modal.component.css'] })
 export class PersonnelTaskModalComponent {
-    @Input() task!: Task;
-    @Output() saved = new EventEmitter<{ task: Task; status: string }>();
+    @Input() task!: InterventionResponse;
+    @Output() saved = new EventEmitter<{ task: InterventionResponse; newStatus: StatusIntervention }>();
     @Output() closed = new EventEmitter<void>();
 
-    selectedStatus: string = '';
+    selectedStatus: StatusIntervention | null = null;
     comment: string = '';
     showToast = false;
 
+    StatusIntervention = StatusIntervention;
+
     save() {
         if (!this.selectedStatus) { alert('Veuillez sélectionner un statut.'); return; }
-        this.saved.emit({ task: this.task, status: this.selectedStatus });
+        this.saved.emit({ task: this.task, newStatus: this.selectedStatus });
         this.showToast = true;
         setTimeout(() => { this.showToast = false; this.closed.emit(); }, 1500);
     }

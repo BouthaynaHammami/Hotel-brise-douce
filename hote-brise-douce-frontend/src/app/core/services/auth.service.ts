@@ -1,5 +1,5 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { UserRegister, Token, UtilisateurResponse, RoleEnum } from '../models/user.model';
@@ -19,10 +19,13 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   login(username: string, password: string): Observable<Token> {
-    // JSON body — avoids chunked transfer-encoding issue through Spring Cloud Gateway
-    const body = { username, password };
+    const body = new HttpParams()
+      .set('username', username)
+      .set('password', password);
 
-    return this.http.post<Token>(`${this.apiUrl}/login`, body).pipe(
+    return this.http.post<Token>(`${this.apiUrl}/login`, body, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
+    }).pipe(
       tap(response => {
         this.setSession(response.access_token);
         this.currentUserSubject.next(this.getUserFromToken());
@@ -56,8 +59,14 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return null;
     try {
-      const payload = token.split('.')[1];
-      return JSON.parse(atob(payload)); // contains 'sub' (email) and 'role'
+      let payload = token.split('.')[1];
+      if (!payload) return null;
+      payload = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const pad = payload.length % 4;
+      if (pad) {
+        payload += '='.repeat(4 - pad);
+      }
+      return JSON.parse(atob(payload));
     } catch {
       return null;
     }
