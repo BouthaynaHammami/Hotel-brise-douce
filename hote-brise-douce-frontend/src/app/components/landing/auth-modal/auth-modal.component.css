@@ -1,0 +1,16 @@
+.card-glass {
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    box-shadow: 0 25px 60px rgba(7, 35, 106, 0.15);
+}
+
+.tab-active {
+    border-bottom: 2px solid var(--gold);
+    color: var(--navy);
+    font-weight: 500;
+}
+
+.tab-inactive {
+    border-bottom: 2px solid transparent;
+    color: #888;
+}

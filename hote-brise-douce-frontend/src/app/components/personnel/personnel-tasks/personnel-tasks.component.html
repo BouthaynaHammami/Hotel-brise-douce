@@ -1,0 +1,64 @@
+<!-- STATS RAPIDES -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
+    <div *ngFor="let s of stats" class="card p-4 text-center">
+        <p class="serif text-3xl font-light {{ s.color }}">{{ s.value }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ s.label }}</p>
+    </div>
+</div>
+
+<!-- FILTRES -->
+<div class="flex items-center justify-between mb-5">
+    <div class="flex gap-2">
+        <button (click)="setFilter('all')" [class.active]="filter === 'all'"
+            class="filter-btn px-4 py-2 rounded-lg text-xs font-medium">Toutes</button>
+        <button (click)="setFilter('attente')" [class.active]="filter === 'attente'"
+            class="filter-btn px-4 py-2 rounded-lg text-xs font-medium">En attente</button>
+        <button (click)="setFilter('cours')" [class.active]="filter === 'cours'"
+            class="filter-btn px-4 py-2 rounded-lg text-xs font-medium">En cours</button>
+        <button (click)="setFilter('urgent')" [class.active]="filter === 'urgent'"
+            class="filter-btn px-4 py-2 rounded-lg text-xs font-medium text-red-600">Urgent</button>
+    </div>
+    <p class="text-xs text-gray-400">28 Mars 2026</p>
+</div>
+
+<!-- LISTE DES TÂCHES -->
+<div class="space-y-4">
+    <div *ngFor="let task of filteredTasks" class="card task-card p-5" [class.task-urgent]="task.status === 'urgent'"
+        [class.task-progress]="task.status === 'cours'" [class.task-pending]="task.status === 'attente'"
+        [class.task-done]="task.status === 'done'" [class.opacity-60]="task.opacity">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xl">{{ task.icon }}</span>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-semibold text-sm" [class.text-gray-500]="task.opacity"
+                                style="color: var(--navy)">{{ task.title }}</h3>
+                            <span [ngClass]="task.badgeClass" class="px-2 py-0.5 rounded-full text-xs">{{ task.badge
+                                }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-0.5">Assignée par : {{ task.assignedBy }} · {{
+                            task.assignedAt }}</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mb-3 ml-9">{{ task.description }}</p>
+                <div class="flex items-center gap-4 ml-9 text-xs text-gray-400">
+                    <span>📍 {{ task.location }}</span>
+                    <span>⏰ {{ task.deadline }}</span>
+                    <span>{{ task.status === 'done' ? '✅' : '🔧' }} {{ task.type }}</span>
+                </div>
+            </div>
+            <div class="ml-4 flex flex-col gap-2 items-end" *ngIf="task.status !== 'done'">
+                <button (click)="openModal(task)" class="btn-primary px-4 py-2 rounded-lg text-xs">Mettre à
+                    jour</button>
+            </div>
+            <span *ngIf="task.status === 'done'" class="badge-green px-3 py-1 rounded-full text-xs ml-4">Terminé
+                ✓</span>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL -->
+<app-personnel-task-modal *ngIf="modalOpen && selectedTask" [task]="selectedTask" (saved)="onStatusSaved($event)"
+    (closed)="onModalClosed()">
+</app-personnel-task-modal>

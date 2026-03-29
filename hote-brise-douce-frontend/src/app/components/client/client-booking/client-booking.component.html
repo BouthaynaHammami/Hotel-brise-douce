@@ -1,0 +1,119 @@
+<h2 class="serif text-3xl font-light mb-2" style="color:var(--navy)">Faire une réservation</h2>
+<p class="text-gray-500 text-sm mb-6">Choisissez vos dates et votre type de chambre.</p>
+
+<!-- Steps indicator -->
+<div class="flex items-center gap-3 mb-8">
+    <ng-container *ngFor="let s of [1,2,3]; let i = index">
+        <div class="flex items-center gap-2">
+            <div class="step-num"
+                [ngClass]="currentStep > s ? 'step-done' : currentStep === s ? 'step-active' : 'step-inactive'">{{ s }}
+            </div>
+            <span class="text-sm" [class.font-medium]="currentStep >= s" [class.text-gray-400]="currentStep < s"
+                [style.color]="currentStep >= s ? 'var(--navy)' : ''">
+                {{ ['Dates & Type', 'Chambre', 'Confirmation'][i] }}
+            </span>
+        </div>
+        <div *ngIf="s < 3" class="flex-1 h-px bg-gray-200"></div>
+    </ng-container>
+</div>
+
+<!-- Step 1 -->
+<div *ngIf="currentStep === 1" class="card p-7">
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+        <div><label class="block text-xs text-gray-500 tracking-widest uppercase mb-2">Date d'arrivée</label>
+            <input type="date" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm transition-all" />
+        </div>
+        <div><label class="block text-xs text-gray-500 tracking-widest uppercase mb-2">Date de départ</label>
+            <input type="date" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm transition-all" />
+        </div>
+        <div><label class="block text-xs text-gray-500 tracking-widest uppercase mb-2">Adultes</label>
+            <select class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm transition-all">
+                <option>1 adulte</option>
+                <option>2 adultes</option>
+                <option>3 adultes</option>
+            </select>
+        </div>
+        <div><label class="block text-xs text-gray-500 tracking-widest uppercase mb-2">Type de chambre</label>
+            <select class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm transition-all">
+                <option>Standard</option>
+                <option>Deluxe</option>
+                <option>Suite</option>
+            </select>
+        </div>
+    </div>
+    <div class="flex justify-end">
+        <button (click)="goStep(2)" class="btn-primary px-6 py-3 rounded-lg text-sm">Voir les disponibilités →</button>
+    </div>
+</div>
+
+<!-- Step 2 -->
+<div *ngIf="currentStep === 2">
+    <div class="grid md:grid-cols-2 gap-5 mb-6">
+        <div *ngFor="let r of rooms; let i = index" class="room-option relative p-5"
+            [class.selected]="selectedRoom === i" (click)="selectedRoom = i">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h4 class="font-semibold text-sm" style="color:var(--navy)">{{ r.name }}</h4>
+                    <p class="text-xs text-gray-500 mt-1">{{ r.details }}</p>
+                    <div class="flex gap-3 mt-3 text-xs text-gray-400">
+                        <span *ngFor="let a of r.amenities">{{ a }}</span>
+                    </div>
+                </div>
+                <p class="text-right"><span class="serif text-xl" style="color:var(--gold)">{{ r.price }}€</span><span
+                        class="text-xs text-gray-400 block">/ nuit</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="flex gap-3 justify-between">
+        <button (click)="goStep(1)" class="border border-gray-200 px-6 py-3 rounded-lg text-sm">← Retour</button>
+        <button (click)="goStep(3)" class="btn-primary px-6 py-3 rounded-lg text-sm">Continuer →</button>
+    </div>
+</div>
+
+<!-- Step 3 -->
+<div *ngIf="currentStep === 3" class="card p-7 mb-5">
+    <h3 class="font-semibold text-sm mb-5" style="color:var(--navy)">Récapitulatif de votre réservation</h3>
+    <div class="bg-blue-50 rounded-xl p-5 mb-5">
+        <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Chambre</p>
+                <p class="font-medium">{{ rooms[selectedRoom].name }}</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Arrivée</p>
+                <p class="font-medium">30 Mars 2026</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Départ</p>
+                <p class="font-medium">2 Avril 2026</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Durée</p>
+                <p class="font-medium">3 nuits</p>
+            </div>
+        </div>
+        <div class="border-t border-blue-200 mt-4 pt-4 flex justify-between items-center">
+            <span class="font-medium text-sm">Total</span>
+            <span class="serif text-2xl" style="color:var(--gold)">{{ rooms[selectedRoom].price * 3 }}€</span>
+        </div>
+    </div>
+    <div class="mb-5">
+        <label class="block text-xs text-gray-500 tracking-widest uppercase mb-2">Demandes particulières</label>
+        <textarea rows="3" class="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm resize-none transition-all"
+            placeholder="Lit bébé, arrivée tardive…"></textarea>
+    </div>
+    <div class="flex items-center gap-2 mb-5">
+        <input type="checkbox" id="cgu" class="rounded" />
+        <label for="cgu" class="text-sm text-gray-600">J'accepte les <span style="color:var(--navy)"
+                class="cursor-pointer hover:underline">conditions générales</span></label>
+    </div>
+    <div class="flex gap-3 justify-between">
+        <button (click)="goStep(2)" class="border border-gray-200 px-6 py-3 rounded-lg text-sm">← Retour</button>
+        <button (click)="confirm()" class="btn-gold px-8 py-3 rounded-lg text-sm">Confirmer la réservation ✓</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div *ngIf="showToast" class="fixed bottom-8 right-8 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl text-sm">
+    ✓ Réservation confirmée ! Vous recevrez un email de confirmation.
+</div>
