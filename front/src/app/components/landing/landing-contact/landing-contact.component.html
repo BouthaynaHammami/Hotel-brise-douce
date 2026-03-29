@@ -1,0 +1,15 @@
+<section id="contact" class="py-24 px-8 bg-white">
+    <div class="max-w-3xl mx-auto text-center">
+        <p class="text-xs tracking-widest uppercase mb-3" style="color:var(--gold); letter-spacing:0.3em;">Nous Trouver
+        </p>
+        <h2 class="serif text-4xl font-light mb-4" style="color:var(--navy)">Contact & Localisation</h2>
+        <div class="gold-line w-16 mx-auto mb-8"></div>
+        <div class="grid md:grid-cols-3 gap-8 text-center">
+            <div *ngFor="let c of contacts">
+                <div class="text-2xl mb-2">{{ c.icon }}</div>
+                <p class="text-sm font-medium" style="color:var(--navy)">{{ c.label }}</p>
+                <p *ngFor="let line of c.lines" class="text-gray-600 text-sm mt-1">{{ line }}</p>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,209 @@
+<div class="complaints-wrapper">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div class="header-left">
+      <h2>📋 Réclamations & Feedbacks</h2>
+      <p class="subtitle">Gérez les retours clients en temps réel</p>
+    </div>
+    <button class="btn-refresh" (click)="loadAll()">🔄 Actualiser</button>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-row">
+    <div class="stat-card stat-total">
+      <div class="stat-number">{{ items.length }}</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-card stat-attente">
+      <div class="stat-number">{{ countStatut('NOUVELLE') }}</div>
+      <div class="stat-label">Nouvelles</div>
+    </div>
+    <div class="stat-card stat-cours">
+      <div class="stat-number">{{ countStatut('EN_COURS') }}</div>
+      <div class="stat-label">En cours</div>
+    </div>
+    <div class="stat-card stat-resolu">
+      <div class="stat-number">{{ countStatut('RESOLUE') }}</div>
+      <div class="stat-label">Résolues</div>
+    </div>
+    <div class="stat-card stat-rejete">
+      <div class="stat-number">{{ countStatut('FERMEE') }}</div>
+      <div class="stat-label">Fermées</div>
+    </div>
+  </div>
+
+  <!-- Erreur -->
+  <div *ngIf="error" class="alert-error">⚠️ {{ error }}</div>
+
+  <!-- Tabs -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'ALL'" (click)="setTab('ALL')">
+      Tous <span class="tab-count">{{ items.length }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'RECLAMATION'" (click)="setTab('RECLAMATION')">
+      Réclamations <span class="tab-count red">{{ count('RECLAMATION') }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'FEEDBACK'" (click)="setTab('FEEDBACK')">
+      Feedbacks <span class="tab-count blue">{{ count('FEEDBACK') }}</span>
+    </button>
+  </div>
+
+  <!-- Chargement -->
+  <div *ngIf="loading" class="loading-box">
+    <div class="spinner"></div>
+    <p>Chargement en cours...</p>
+  </div>
+
+  <!-- Tableau -->
+  <div *ngIf="!loading && !error" class="table-box">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type</th>
+          <th>Titre</th>
+          <th>Catégorie</th>
+          <th>Priorité</th>
+          <th>Client ID</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filtered" class="table-row" (click)="ouvrirDetail(item)">
+          <td><strong>#{{ item.id }}</strong></td>
+          <td><span [class]="getTypeClass(item.typeEntree)">{{ item.typeEntree }}</span></td>
+          <td class="sujet-cell">{{ item.titre }}</td>
+          <td>{{ item.categorie }}</td>
+          <td><span [class]="getPrioriteClass(item.priorite)">{{ item.priorite }}</span></td>
+          <td>{{ item.idClient }}</td>
+          <td><span [class]="getStatutClass(item.statut)">{{ item.statut }}</span></td>
+          <td>{{ item.dateCreation | date:'dd/MM/yyyy' }}</td>
+          <td (click)="$event.stopPropagation()">
+            <div class="action-group">
+              <button class="action-btn green"
+                title="Résoudre"
+                [disabled]="item.statut === 'RESOLUE'"
+                (click)="changerStatut(item.id, 'RESOLUE')">✓</button>
+              <button class="action-btn orange"
+                title="En cours"
+                [disabled]="item.statut === 'EN_COURS'"
+                (click)="changerStatut(item.id, 'EN_COURS')">⏳</button>
+              <button class="action-btn gray"
+                title="Fermer"
+                [disabled]="item.statut === 'FERMEE'"
+                (click)="changerStatut(item.id, 'FERMEE')">✗</button>
+              <button class="action-btn red"
+                title="Supprimer"
+                (click)="supprimer(item.id)">🗑</button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filtered.length === 0">
+          <td colspan="9" class="empty-row">Aucun élément trouvé.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ══════════════════════ MODAL DÉTAIL ══════════════════════ -->
+<div class="modal-overlay" *ngIf="showModal" (click)="fermerModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h3>Détail — #{{ selectedItem?.id }}</h3>
+      <button class="modal-close" (click)="fermerModal()">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedItem">
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Type</label>
+          <span [class]="getTypeClass(selectedItem.typeEntree)">{{ selectedItem.typeEntree }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Statut</label>
+          <span [class]="getStatutClass(selectedItem.statut)">{{ selectedItem.statut }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Priorité</label>
+          <span [class]="getPrioriteClass(selectedItem.priorite)">{{ selectedItem.priorite }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Catégorie</label>
+          <span>{{ selectedItem.categorie }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Client ID</label>
+          <span>{{ selectedItem.idClient }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Réservation ID</label>
+          <span>{{ selectedItem.idReservation ?? '—' }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Note</label>
+          <span>{{ selectedItem.note ? (selectedItem.note + ' / 5 ⭐') : '—' }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Date création</label>
+          <span>{{ selectedItem.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="detail-item" *ngIf="selectedItem.dateResolution">
+          <label>Date résolution</label>
+          <span>{{ selectedItem.dateResolution | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+
+      <div class="detail-full">
+        <label>Titre</label>
+        <p>{{ selectedItem.titre }}</p>
+      </div>
+
+      <div class="detail-full">
+        <label>Description</label>
+        <p>{{ selectedItem.description }}</p>
+      </div>
+
+      <div class="detail-full" *ngIf="selectedItem.reponse">
+        <label>Réponse précédente</label>
+        <p class="reponse-text">{{ selectedItem.reponse }}</p>
+      </div>
+
+      <div class="detail-full">
+        <label>Réponse admin</label>
+        <textarea
+          [(ngModel)]="reponseAdmin"
+          rows="4"
+          placeholder="Saisissez votre réponse au client...">
+        </textarea>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-modal gray" (click)="fermerModal()">Fermer</button>
+      <button class="btn-modal orange"
+        [disabled]="savingStatut || selectedItem?.statut === 'EN_COURS'"
+        (click)="changerStatut(selectedItem!.id, 'EN_COURS')">
+        ⏳ En cours
+      </button>
+      <button class="btn-modal green"
+        [disabled]="savingStatut || selectedItem?.statut === 'RESOLUE'"
+        (click)="resoudreAvecReponse()">
+        {{ savingStatut ? 'Enregistrement...' : '✓ Résoudre' }}
+      </button>
+      <button class="btn-modal red"
+        [disabled]="savingStatut || selectedItem?.statut === 'FERMEE'"
+        (click)="changerStatut(selectedItem!.id, 'FERMEE')">
+        ✗ Fermer
+      </button>
+    </div>
+
+  </div>
+</div>

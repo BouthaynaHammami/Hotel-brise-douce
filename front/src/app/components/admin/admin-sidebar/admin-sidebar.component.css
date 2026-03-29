@@ -1,0 +1,19 @@
+.sidebar {
+    background: var(--sidebar);
+    width: 240px;
+}
+
+.nav-item {
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-left-color: var(--gold);
+}
+
+.nav-item.active {
+    background: rgba(201, 168, 76, 0.15);
+    border-left-color: var(--gold);
+}
