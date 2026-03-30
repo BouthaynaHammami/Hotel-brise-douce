@@ -1,0 +1,7 @@
+Field	Type	Null	Key	Default	Extra
+conge_id	bigint	NO	PRI	NULL	auto_increment
+date_debut	date	YES		NULL	
+date_fin	date	YES		NULL	
+statut	enum('EN_ATTENTE','APPROUVE','REFUSE')	YES		NULL	
+type	varchar(255)	YES		NULL	
+id_employe	bigint	YES		NULL	

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Annotation profile for DevUnity_BriseDouce" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
+        </processorPath>
+        <module name="Gestion_clients (1)" />
+        <module name="Gestion_nettoyage_maintenance" />
+        <module name="Discovery" />
+        <module name="Gestion_reservations" />
+        <module name="API_Gateway" />
+        <module name="Gestion_chambres" />
+        <module name="Gestion_avis_reclamations" />
+      </profile>
+      <profile name="Annotation profile for Gestion_personnel" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
+        </processorPath>
+        <module name="Gestion_personnel" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="API_Gateway (1)" target="17" />
+      <module name="DevUnity_BriseDouce (1)" target="17" />
+      <module name="Discovery (1)" target="17" />
+      <module name="Gestion_avis_reclamations (1)" target="17" />
+      <module name="Gestion_chambres (1)" target="17" />
+      <module name="Gestion_clients" target="17" />
+      <module name="Gestion_nettoyage_maintenance (1)" target="17" />
+      <module name="Gestion_personnel (1)" target="1.8" />
+      <module name="Gestion_reservations (1)" target="17" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="API_Gateway" options="-parameters" />
+      <module name="API_Gateway (1)" options="-parameters" />
+      <module name="DevUnity_BriseDouce" options="-parameters" />
+      <module name="DevUnity_BriseDouce (1)" options="-parameters" />
+      <module name="Discovery" options="-parameters" />
+      <module name="Discovery (1)" options="-parameters" />
+      <module name="Gestion_avis_reclamations" options="-parameters" />
+      <module name="Gestion_avis_reclamations (1)" options="-parameters" />
+      <module name="Gestion_chambres" options="-parameters" />
+      <module name="Gestion_chambres (1)" options="-parameters" />
+      <module name="Gestion_clients" options="-parameters" />
+      <module name="Gestion_clients (1)" options="-parameters" />
+      <module name="Gestion_nettoyage_maintenance" options="-parameters" />
+      <module name="Gestion_nettoyage_maintenance (1)" options="-parameters" />
+      <module name="Gestion_personnel" options="-parameters" />
+      <module name="Gestion_personnel (1)" options="-parameters" />
+      <module name="Gestion_reservations" options="-parameters" />
+      <module name="Gestion_reservations (1)" options="-parameters" />
+    </option>
+  </component>
+</project>

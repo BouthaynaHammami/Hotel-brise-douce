@@ -1,0 +1,8 @@
+.room-card:hover .room-overlay {
+    opacity: 1;
+}
+
+.room-overlay {
+    opacity: 0;
+    transition: opacity 0.3s;
+}

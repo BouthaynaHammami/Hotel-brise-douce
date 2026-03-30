@@ -1,0 +1,11 @@
+Field	Type	Null	Key	Default	Extra
+tache_id	bigint	NO	PRI	NULL	auto_increment
+date_debut	date	YES		NULL	
+date_fin	date	YES		NULL	
+description	varchar(255)	YES		NULL	
+statut	enum('A_FAIRE','EN_COURS','TERMINE')	YES		NULL	
+titre	varchar(255)	YES		NULL	
+id_employe	bigint	YES		NULL	
+id_planning	bigint	YES	MUL	NULL	
+planning_id_planning	bigint	YES	MUL	NULL	
+type_shift	enum('MATIN','SOIR','NUIT')	YES		NULL	
