@@ -1,0 +1,8 @@
+tn\esprit\chambres_service\Entities\chambres.class
+tn\esprit\chambres_service\Entities\Etat.class
+tn\esprit\chambres_service\Controllers\ChambreController.class
+tn\esprit\chambres_service\Services\ImplServices\ChambreServiceImpl.class
+tn\esprit\chambres_service\Repositories\ChambreRepository.class
+tn\esprit\chambres_service\ChambresApplication.class
+tn\esprit\chambres_service\Entities\chambres$chambresBuilder.class
+tn\esprit\chambres_service\Services\IServices\IChambreService.class

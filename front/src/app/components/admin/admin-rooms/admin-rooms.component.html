@@ -1,0 +1,147 @@
+<div class="flex justify-between items-center mb-6">
+    <div class="flex gap-3">
+        <button 
+            (click)="setFilter('all')" 
+            [class]="filter === 'all' ? 'px-3 py-1.5 rounded text-sm bg-blue-100 text-blue-700' : 'px-3 py-1.5 rounded text-sm text-gray-500 hover:bg-gray-100'">
+            Toutes
+        </button>
+        <button 
+            (click)="setFilter('disponible')" 
+            [class]="filter === 'disponible' ? 'px-3 py-1.5 rounded text-sm bg-blue-100 text-blue-700' : 'px-3 py-1.5 rounded text-sm text-gray-500 hover:bg-gray-100'">
+            Disponibles
+        </button>
+        <button 
+            (click)="setFilter('occupee')" 
+            [class]="filter === 'occupee' ? 'px-3 py-1.5 rounded text-sm bg-blue-100 text-blue-700' : 'px-3 py-1.5 rounded text-sm text-gray-500 hover:bg-gray-100'">
+            Occupées
+        </button>
+        <button 
+            (click)="setFilter('maintenance')" 
+            [class]="filter === 'maintenance' ? 'px-3 py-1.5 rounded text-sm bg-blue-100 text-blue-700' : 'px-3 py-1.5 rounded text-sm text-gray-500 hover:bg-gray-100'">
+            Maintenance
+        </button>
+    </div>
+    <button (click)="openAddModal()" class="btn-primary px-4 py-2 rounded text-sm">+ Ajouter chambre</button>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div *ngFor="let room of filteredRooms" class="card p-4 border-l-4" [ngClass]="getRoomBorder(room.etat)">
+        <p class="font-bold" style="color:var(--navy)">{{ room.numero }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ room.typeChambre }} · {{ room.capacite }} pers</p>
+        <p class="text-xs text-gray-600 mt-1">Étage {{ room.etage }} · {{ room.tarifStandard }}€/nuit</p>
+        <span [ngClass]="getRoomStatusBadge(room.etat)" class="px-2 py-0.5 rounded-full text-xs mt-2 inline-block">
+            {{ getStatusLabel(room.etat) }}
+        </span>
+    </div>
+</div>
+
+<!-- Modal pour ajouter une chambre -->
+<div *ngIf="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Ajouter une chambre</h3>
+            <button (click)="closeAddModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <form (ngSubmit)="addRoom()" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Numéro de chambre</label>
+                <input 
+                    type="text" 
+                    [(ngModel)]="newRoom.numero" 
+                    name="numero"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ex: 101"
+                    required>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type de chambre</label>
+                <select 
+                    [(ngModel)]="newRoom.typeChambre" 
+                    name="typeChambre"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+                    <option value="">Sélectionner un type</option>
+                    <option *ngFor="let type of roomTypes" [value]="type">{{ type }}</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Étage</label>
+                    <input 
+                        type="number" 
+                        [(ngModel)]="newRoom.etage" 
+                        name="etage"
+                        min="1"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Capacité</label>
+                    <input 
+                        type="number" 
+                        [(ngModel)]="newRoom.capacite" 
+                        name="capacite"
+                        min="1"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tarif standard (€/nuit)</label>
+                <input 
+                    type="number" 
+                    [(ngModel)]="newRoom.tarifStandard" 
+                    name="tarifStandard"
+                    min="0"
+                    step="0.01"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">État</label>
+                <select 
+                    [(ngModel)]="newRoom.etat" 
+                    name="etat"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required>
+                    <option *ngFor="let etat of etatOptions" [value]="etat">{{ getStatusLabel(etat) }}</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Image (URL)</label>
+                <input 
+                    type="url" 
+                    [(ngModel)]="newRoom.imageChambre" 
+                    name="imageChambre"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://example.com/image.jpg">
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button 
+                    type="button" 
+                    (click)="closeAddModal()"
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                    Annuler
+                </button>
+                <button 
+                    type="submit" 
+                    [disabled]="!isValidRoom()"
+                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                    Ajouter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

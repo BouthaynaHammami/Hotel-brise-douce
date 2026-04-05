@@ -1,0 +1,123 @@
+<div class="px-8 py-4 flex items-center justify-between shadow" style="background: var(--navy)">
+    <div class="flex items-center gap-3 w-1/3">
+        <div class="w-8 h-8 rounded-full border-2 border-yellow-400 flex items-center justify-center">
+            <span class="serif text-yellow-400 font-bold text-sm">B</span>
+        </div>
+        <span class="serif text-white text-xl tracking-widest hidden sm:inline">BRICE DOUCE</span>
+        <span class="text-blue-400 text-xs ml-2 border-l border-blue-700 pl-3 hidden md:inline">Espace Personnel</span>
+    </div>
+    
+    <div class="flex items-center gap-4 justify-end w-2/3">
+        <div *ngIf="currentUser" class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" (click)="openProfile()" title="Mettre à jour mon profil">
+            <div class="text-right hidden sm:block">
+                <p class="text-white text-sm font-medium">{{ currentUser.prenom }} {{ currentUser.nom }}</p>
+                <p class="text-blue-300 text-xs">{{ currentUser.poste || 'Personnel' }} {{ currentUser.horaires ? '· ' + currentUser.horaires : '' }}</p>
+            </div>
+            <div class="w-9 h-9 rounded-full bg-yellow-500 flex items-center justify-center text-white text-sm font-bold">
+                {{ getInitials() }}
+            </div>
+        </div>
+        <div *ngIf="!currentUser" class="text-gray-400 text-xs">Chargement...</div>
+
+        <!-- Notification Bell -->
+        <div class="relative ml-2" *ngIf="currentUser">
+            <button (click)="toggleNotifications()" class="relative p-2 text-blue-300 hover:text-white transition-colors focus:outline-none">
+                <svg xmlns="http://www.w3.org/2001/XMLSchema-instance" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                </svg>
+                <span *ngIf="(notificationService.unreadCount$ | async) ?? 0 > 0" class="absolute top-1 right-1 flex h-4 w-4">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-white text-[10px] items-center justify-center">
+                    {{ notificationService.unreadCount$ | async }}
+                  </span>
+                </span>
+            </button>
+
+            <!-- Notifications Dropdown -->
+            <div *ngIf="showNotifications" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-200" style="max-height: 400px; overflow-y: auto;">
+                <div class="px-4 py-2 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <span class="text-sm font-semibold text-gray-700">Notifications</span>
+                    <span class="text-xs text-blue-500 cursor-pointer" (click)="showNotifications = false">Fermer</span>
+                </div>
+                <div *ngIf="(notificationService.notifications$ | async)?.length === 0" class="px-4 py-8 text-center text-sm text-gray-500 italic">
+                    Aucune notification pour le moment.
+                </div>
+                <div *ngFor="let notif of (notificationService.notifications$ | async)" 
+                     (click)="markRead(notif)"
+                     class="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
+                     [ngClass]="{'bg-yellow-50': !notif.lue}">
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold" [ngClass]="notif.lue ? 'text-gray-600' : 'text-blue-700'">{{ notif.titre }}</span>
+                            <span class="text-[10px] text-gray-400">{{ notif.dateCreation | date:'shortTime' }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 line-clamp-2">{{ notif.message }}</p>
+                        <span *ngIf="!notif.lue" class="text-[9px] text-blue-500 font-bold uppercase mt-1">Nouveau</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button (click)="logout()" class="text-blue-300 hover:text-white text-xs transition-colors ml-4 border-l border-blue-800 pl-4">Déconnexion</button>
+    </div>
+</div>
+
+<app-update-profile 
+    *ngIf="currentUser"
+    [user]="currentUser"
+    [visible]="isProfileModalVisible"
+    (close)="closeProfile()"
+    (profileUpdated)="onProfileUpdated($event)">
+</app-update-profile><!-- Notification Details Modal -->
+<div *ngIf="isNotificationModalVisible && selectedNotification" class="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100 border border-yellow-900/10">
+        <!-- Modal Header -->
+        <div class="px-6 py-5 flex justify-between items-center" style="background: var(--navy)">
+            <h3 class="serif text-white font-bold text-xl tracking-widest flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2001/XMLSchema-instance" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#c9a84c" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                </svg>
+                NOTIFICATION
+            </h3>
+            <button (click)="closeNotification()" class="text-white/60 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2001/XMLSchema-instance" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-8 py-8" style="background: var(--light)">
+            <div class="flex flex-col gap-6">
+                <div>
+                    <span class="text-[10px] text-yellow-700 uppercase font-bold tracking-[0.2em] mb-1 block">Objet</span>
+                    <h4 class="serif text-2xl font-bold text-gray-900 leading-tight">{{ selectedNotification.titre }}</h4>
+                    <div class="w-12 h-0.5 mt-2" style="background: var(--gold)"></div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-5 shadow-sm border-l-4 border-yellow-600">
+                    <span class="text-[10px] text-gray-400 uppercase font-semibold tracking-widest block mb-3">Détails du message</span>
+                    <p class="text-gray-700 leading-relaxed italic">"{{ selectedNotification.message }}"</p>
+                </div>
+                
+                <div class="flex justify-end items-center">
+                    <span class="text-[11px] text-gray-400 flex items-center gap-2 font-medium">
+                        <svg xmlns="http://www.w3.org/2001/XMLSchema-instance" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#c9a84c" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Reçu le {{ selectedNotification.dateCreation | date:'dd MMMM yyyy à HH:mm' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-8 py-5 bg-white border-t border-gray-100 flex justify-center">
+            <button (click)="closeNotification()" 
+                class="serif px-10 py-2 rounded-full font-bold text-sm transition-all tracking-[0.2em] shadow-lg active:scale-95 text-white"
+                style="background: var(--navy)">
+                FERMER
+            </button>
+        </div>
+    </div>
+</div>

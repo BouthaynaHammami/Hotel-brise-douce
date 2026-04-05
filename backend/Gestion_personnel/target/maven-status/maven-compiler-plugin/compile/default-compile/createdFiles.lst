@@ -1,0 +1,17 @@
+tn\esprit\personnel_service\Services\TacheServiceImpl.class
+tn\esprit\personnel_service\DTO\UtilisateurDTO.class
+tn\esprit\personnel_service\Entities\Tache.class
+tn\esprit\personnel_service\Entities\TypeShift.class
+tn\esprit\personnel_service\Repositories\CongeRepository.class
+tn\esprit\personnel_service\Controllers\CongeController.class
+tn\esprit\personnel_service\Services\ICongeService.class
+tn\esprit\personnel_service\Controllers\TacheController.class
+tn\esprit\personnel_service\Clients\UtilisateurClient.class
+tn\esprit\personnel_service\Entities\StatutConge.class
+tn\esprit\personnel_service\PersonnelApplication.class
+tn\esprit\personnel_service\Services\CongeServiceImpl.class
+tn\esprit\personnel_service\DTO\UtilisateurDTO$UtilisateurDTOBuilder.class
+tn\esprit\personnel_service\Repositories\TacheRepository.class
+tn\esprit\personnel_service\Entities\StatutTache.class
+tn\esprit\personnel_service\Entities\Conge.class
+tn\esprit\personnel_service\Services\ITacheService.class

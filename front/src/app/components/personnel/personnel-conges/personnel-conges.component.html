@@ -1,0 +1,90 @@
+<h2 class="serif text-3xl font-light mb-6" style="color:var(--navy)">Mes demandes de congés</h2>
+
+<div class="flex justify-end mb-6">
+    <button (click)="openAddLeaveModal()" class="btn-primary px-4 py-2 rounded text-sm text-white">+ Nouvelle demande</button>
+</div>
+
+<!-- Modal d'ajout de congé -->
+<div *ngIf="isAddLeaveModalVisible" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
+        <div class="bg-navy p-4 text-white">
+            <h2 class="text-lg font-semibold">Faire une demande de congé</h2>
+        </div>
+        
+        <form (ngSubmit)="saveLeave()" class="p-6">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Date de début</label>
+                    <input [(ngModel)]="newLeave.dateDebut" name="dateDebut" type="date" class="w-full bg-gray-50 border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-navy/10 focus:border-navy transition-all" required>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Date de fin</label>
+                    <input [(ngModel)]="newLeave.dateFin" name="dateFin" type="date" class="w-full bg-gray-50 border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-navy/10 focus:border-navy transition-all" required>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Type de congé</label>
+                <select [(ngModel)]="newLeave.type" name="type" class="w-full bg-gray-50 border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-navy/10 focus:border-navy transition-all" required>
+                    <option value="">-- Sélectionner un type --</option>
+                    <option *ngFor="let type of leaveTypes" [value]="type">{{ type }}</option>
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-2 border-t border-gray-100">
+                <button type="button" (click)="closeAddLeaveModal()" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">Annuler</button>
+                <button type="submit" class="btn-primary px-6 py-2 rounded-lg text-sm text-white shadow-lg shadow-navy/20 active:scale-95 transition-all">Soumettre la demande</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- LOADING STATE -->
+<div *ngIf="isLoading" class="card p-12 text-center">
+    <p class="text-gray-500">Chargement de vos congés...</p>
+</div>
+
+<!-- LISTE DES CONGÉS -->
+<div *ngIf="!isLoading" class="card overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="bg-gray-50/50">
+                <th class="px-4 py-4 text-left font-semibold text-gray-600">Type</th>
+                <th class="px-4 py-4 text-left font-semibold text-gray-600">Date début</th>
+                <th class="px-4 py-4 text-left font-semibold text-gray-600">Date fin</th>
+                <th class="px-4 py-4 text-left font-semibold text-gray-600">Durée</th>
+                <th class="px-4 py-4 text-left font-semibold text-gray-600">Statut</th>
+                <th class="px-4 py-4 text-left font-semibold text-gray-600">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let leave of leaves" class="hover:bg-blue-50/30 transition-colors">
+                <td class="px-4 py-4">
+                    <div class="font-medium text-navy">{{ leave.type }}</div>
+                </td>
+                <td class="px-4 py-4 text-gray-600">{{ leave.dateDebut }}</td>
+                <td class="px-4 py-4 text-gray-600">{{ leave.dateFin }}</td>
+                <td class="px-4 py-4 text-gray-600 text-sm">
+                    <span *ngIf="leave.dateDebut && leave.dateFin" class="badge-gray px-2 py-1 rounded text-[10px] font-bold">
+                        {{ calculateLeaveDuration(leave.dateDebut, leave.dateFin) }} jour(s)
+                    </span>
+                </td>
+                <td class="px-4 py-4">
+                    <span [ngClass]="getStatutBadgeClass(leave.statut)" class="px-2 py-1 rounded-full text-[10px] font-bold tracking-tight shadow-sm">
+                        {{ getStatutLabel(leave.statut) }}
+                    </span>
+                </td>
+                <td class="px-4 py-4">
+                    <button *ngIf="canDeleteLeave(leave.statut)" (click)="deleteLeave(leave.idConge)" class="text-red-600 hover:text-red-800 transition-colors font-semibold text-xs">
+                        Annuler
+                    </button>
+                    <span *ngIf="!canDeleteLeave(leave.statut)" class="text-gray-400 text-xs italic">-</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div *ngIf="leaves.length === 0" class="p-12 text-center">
+        <div class="text-gray-300 text-4xl mb-3">🏖️</div>
+        <p class="text-gray-500 text-sm italic">Aucune demande de congé. <a (click)="openAddLeaveModal()" class="text-navy font-semibold cursor-pointer">Créer une demande</a></p>
+    </div>
+</div>

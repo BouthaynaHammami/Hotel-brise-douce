@@ -1,0 +1,10 @@
+tn\esprit\nettoyage_maintenance_service\dto\UtilisateurDTO.class
+tn\esprit\nettoyage_maintenance_service\entity\NettoyageMaintenance.class
+tn\esprit\nettoyage_maintenance_service\service\NettoyageMaintenanceService.class
+tn\esprit\nettoyage_maintenance_service\controller\NettoyageMaintenanceController.class
+tn\esprit\nettoyage_maintenance_service\client\UtilisateurClient.class
+tn\esprit\nettoyage_maintenance_service\entity\TypeIntervention.class
+tn\esprit\nettoyage_maintenance_service\entity\StatusIntervention.class
+tn\esprit\nettoyage_maintenance_service\entity\NettoyageMaintenance$NettoyageMaintenanceBuilder.class
+tn\esprit\nettoyage_maintenance_service\repository\NettoyageMaintenanceRepository.class
+tn\esprit\nettoyage_maintenance_service\NettoyageMaintenanceApplication.class

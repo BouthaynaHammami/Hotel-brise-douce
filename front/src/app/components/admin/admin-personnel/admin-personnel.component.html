@@ -1,0 +1,562 @@
+<div>
+    <!-- TABS NAVIGATION -->
+    <div class="flex items-center space-x-1 mb-8 border-b border-gray-100/50">
+        <button 
+            (click)="activeTab = 'personnel'" 
+            [class.active]="activeTab === 'personnel'"
+            class="tab-btn">
+            <span class="mr-2">👥</span> Personnel
+        </button>
+        <button 
+            (click)="activeTab = 'taches'" 
+            [class.active]="activeTab === 'taches'"
+            class="tab-btn">
+            <span class="mr-2">✓</span> Tâches
+        </button>
+        <button 
+            (click)="activeTab = 'conges'" 
+            [class.active]="activeTab === 'conges'"
+            class="tab-btn">
+            <span class="mr-2">🏖️</span> Congés
+        </button>
+    </div>
+
+    <!-- PERSONNEL TAB -->
+    <div *ngIf="activeTab === 'personnel'" class="animate-slide-up">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="serif text-3xl text-navy">Gestion du Personnel</h1>
+                <p class="text-xs text-gray-500 uppercase tracking-widest mt-1">Équipe & Administration</p>
+            </div>
+            <button (click)="isAddModalVisible = true" class="btn-gold px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg shadow-gold/20 flex items-center gap-2">
+                <span class="text-lg">+</span> Ajouter un employé
+            </button>
+        </div>
+
+        <!-- Modal d'ajout d'employé -->
+        <div *ngIf="isAddModalVisible" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-2xl premium-modal w-full max-w-md overflow-hidden animate-slide-up">
+                <div class="modal-header-gradient p-6 text-white relative">
+                    <h2 class="serif text-2xl">Nouveau Collaborateur</h2>
+                    <p class="text-xs text-white/70 uppercase tracking-widest mt-1">Détails du compte</p>
+                    <button (click)="isAddModalVisible = false" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">✕</button>
+                </div>
+                
+                <form (ngSubmit)="saveEmployee()" class="p-8">
+                    <div class="grid grid-cols-2 gap-5 mb-5">
+                        <div>
+                            <label class="form-label-premium">Nom de famille</label>
+                            <input [(ngModel)]="newEmployee.nom" name="nom" class="w-full input-premium" required placeholder="Oueldi">
+                        </div>
+                        <div>
+                            <label class="form-label-premium">Prénom</label>
+                            <input [(ngModel)]="newEmployee.prenom" name="prenom" class="w-full input-premium" required placeholder="Fatima">
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label-premium">Adresse Email</label>
+                        <input [(ngModel)]="newEmployee.email" name="email" type="email" class="w-full input-premium" required placeholder="f.oueldi@hotel.com">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5 mb-5">
+                        <div>
+                            <label class="form-label-premium">N° Téléphone</label>
+                            <input [(ngModel)]="newEmployee.telephone" name="telephone" class="w-full input-premium" placeholder="+216 ...">
+                        </div>
+                        <div>
+                            <label class="form-label-premium">Poste Occupé</label>
+                            <select [(ngModel)]="newEmployee.poste" name="poste" class="w-full input-premium">
+                                <option value="Femme de chambre">Femme de chambre</option>
+                                <option value="Technicien">Technicien</option>
+                                <option value="Réceptionniste">Réceptionniste</option>
+                                <option value="Concierge">Concierge</option>
+                                <option value="Maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <label class="form-label-premium">Mot de passe initial</label>
+                        <div class="relative">
+                            <input [(ngModel)]="newEmployee.motDePasse" name="motDePasse" type="password" class="w-full input-premium pr-10" required placeholder="••••••••">
+                            <span class="absolute right-3 top-2.5 text-gray-300">🔑</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between space-x-3 pt-6 border-t border-gray-100">
+                        <button type="button" (click)="isAddModalVisible = false; resetForm()" class="px-6 py-2.5 text-sm font-semibold text-gray-400 hover:text-navy transition-colors">ANNULER</button>
+                        <button type="submit" class="btn-primary px-8 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-navy/20 active:scale-95 transition-all">CRÉER LE COMPTE</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal de modification d'employé -->
+        <div *ngIf="isEditModalVisible" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl premium-modal w-full max-w-lg overflow-hidden animate-slide-up border border-navy/5">
+                <div class="modal-header-gradient p-8 text-white relative">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-white/10 rounded-2xl backdrop-blur-md flex items-center justify-center text-xl">✎</div>
+                        <div>
+                            <h2 class="serif text-3xl">Modifier le Profil</h2>
+                            <p class="text-xs text-white/60 uppercase tracking-widest mt-1">Édition administrative des détails</p>
+                        </div>
+                    </div>
+                    <button (click)="isEditModalVisible = false" class="absolute top-8 right-8 w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center transition-all">✕</button>
+                </div>
+                
+                <form (ngSubmit)="updateEmployee()" class="p-10">
+                    <div class="bg-light/30 p-6 rounded-2xl mb-8 space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="form-label-premium">Nom de famille</label>
+                                <input [(ngModel)]="editingEmployee.nom" name="edit_nom" class="w-full input-premium font-semibold" required>
+                            </div>
+                            <div>
+                                <label class="form-label-premium">Prénom</label>
+                                <input [(ngModel)]="editingEmployee.prenom" name="edit_prenom" class="w-full input-premium font-semibold" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label-premium">N° Téléphone Professionnel</label>
+                            <input [(ngModel)]="editingEmployee.telephone" name="edit_telephone" class="w-full input-premium font-medium" placeholder="+216 ...">
+                        </div>
+
+                        <div>
+                            <label class="form-label-premium">Statut du compte</label>
+                            <div class="relative">
+                                <select [(ngModel)]="editingEmployee.status" name="edit_status" class="w-full input-premium font-semibold pr-10 appearance-none">
+                                    <option value="Actif">Actif</option>
+                                    <option value="Inactif">Inactif</option>
+                                </select>
+                                <span class="absolute right-4 top-3 text-navy/30 pointer-events-none">▼</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label-premium">Poste & Fonction</label>
+                            <div class="relative">
+                                <select [(ngModel)]="editingEmployee.poste" name="edit_poste" class="w-full input-premium font-semibold pr-10 appearance-none">
+                                    <option value="Femme de chambre">Femme de chambre</option>
+                                    <option value="Technicien">Technicien</option>
+                                    <option value="Réceptionniste">Réceptionniste</option>
+                                    <option value="Concierge">Concierge</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                </select>
+                                <span class="absolute right-4 top-3 text-navy/30 pointer-events-none">▼</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end space-x-4">
+                        <button type="button" (click)="isEditModalVisible = false" class="px-8 py-3 text-sm font-bold text-gray-400 hover:text-navy transition-colors uppercase tracking-widest">ANNULER</button>
+                        <button type="submit" class="btn-primary px-10 py-3 rounded-2xl text-sm font-bold shadow-2xl shadow-navy/20 active:scale-95 transition-all uppercase tracking-widest">ENREGISTRER</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <table class="premium-table">
+                <thead>
+                    <tr class="text-navy/50">
+                        <th class="text-left">Collaborateur</th>
+                        <th class="text-left">Poste</th>
+                        <th class="text-left">Contact</th>
+                        <th class="text-center">Tâches</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-right">Administration</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    <tr *ngFor="let s of staff" class="group">
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div>
+                                    <div class="font-bold text-navy">{{ s.name }}</div>
+                                    <div class="text-[10px] text-gray-400 uppercase tracking-tighter">Collaborateur</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-sm font-medium text-gray-600 block">{{ s.role }}</span>
+                        </td>
+                        <td>
+                            <div class="text-xs text-gray-500 font-medium">{{ s.contact }}</div>
+                        </td>
+                        <td class="text-center">
+                            <span class="bg-gray-100 text-gray-400 px-3 py-1 rounded-full text-[10px] font-bold">{{ s.tasks }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span [ngClass]="s.badge" class="badge-premium">{{ s.status }}</span>
+                        </td>
+                        <td class="text-right">
+                            <button (click)="openEditModal(s.idEmploye)" class="btn-edit-premium group px-4 py-2 rounded-xl bg-white border border-navy/10 text-navy transition-all duration-300 flex items-center gap-2 ml-auto shadow-sm">
+                                <span class="text-xs font-bold uppercase tracking-widest">Modifier</span>
+                                <span class="text-navy group-hover:text-white transition-colors opacity-50 font-bold">✎</span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div *ngIf="staff.length === 0" class="bg-white/50 backdrop-blur-sm rounded-2xl border border-dashed border-navy/10 p-20 text-center">
+                <div class="w-20 h-20 bg-navy/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-4xl grayscale opacity-30">👥</span>
+                </div>
+                <h3 class="serif text-xl text-navy/40 mb-2">Aucun collaborateur référencé</h3>
+                <p class="text-gray-400 text-sm max-w-xs mx-auto">Commencez par ajouter les membres de votre équipe pour commencer la gestion.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TASKS TAB -->
+    <div *ngIf="activeTab === 'taches'" class="animate-slide-up">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="serif text-3xl text-navy">Planification des Tâches</h1>
+                <p class="text-xs text-gray-500 uppercase tracking-widest mt-1">Opérations & Maintenance</p>
+            </div>
+            <button (click)="openAddTaskModal()" class="btn-gold px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg shadow-gold/20 flex items-center gap-2">
+                <span class="text-lg">+</span> Ajouter une tâche
+            </button>
+        </div>
+
+        <!-- Modal d'ajout de tâche -->
+        <div *ngIf="isAddTaskModalVisible" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-2xl premium-modal w-full max-w-2xl overflow-hidden animate-slide-up">
+                <div class="modal-header-gradient p-6 text-white relative">
+                    <h2 class="serif text-2xl">Nouvelle Mission</h2>
+                    <p class="text-xs text-white/70 uppercase tracking-widest mt-1">Assignation & Planning</p>
+                    <button (click)="closeAddTaskModal()" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">✕</button>
+                </div>
+                
+                <form (ngSubmit)="saveTask()" class="p-8">
+                    <div class="mb-5">
+                        <label class="form-label-premium">Titre de la tâche</label>
+                        <input [(ngModel)]="newTask.titre" name="titre" class="w-full input-premium font-semibold" required placeholder="Ex: Inspection de la Suite 504">
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label-premium">Instructions détaillées</label>
+                        <textarea [(ngModel)]="newTask.description" name="description" class="w-full input-premium h-28" required placeholder="Précisez les étapes à suivre..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5 mb-5">
+                        <div>
+                            <label class="form-label-premium">Date de début</label>
+                            <input [(ngModel)]="newTask.dateDebut" name="dateDebut" type="date" class="w-full input-premium" required>
+                        </div>
+                        <div>
+                            <label class="form-label-premium">Date d'échéance</label>
+                            <input [(ngModel)]="newTask.dateFin" name="dateFin" type="date" class="w-full input-premium" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5 mb-8">
+                        <div>
+                            <label class="form-label-premium">Type de service (Shift)</label>
+                            <select [(ngModel)]="newTask.typeShift" name="typeShift" class="w-full input-premium">
+                                <option *ngFor="let shift of typeShiftOptions" [value]="shift">{{ shift }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label-premium">Assigner au personnel</label>
+                            <select [(ngModel)]="newTask.idEmploye" name="idEmploye" class="w-full input-premium" required>
+                                <option [value]="undefined">-- Choisir un employé --</option>
+                                <option *ngFor="let member of staff" [value]="member.idEmploye">{{ member.name }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between space-x-3 pt-6 border-t border-gray-100">
+                        <button type="button" (click)="closeAddTaskModal()" class="px-6 py-2.5 text-sm font-semibold text-gray-400 hover:text-navy transition-colors">ANNULER</button>
+                        <button type="submit" class="btn-primary px-8 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-navy/20 active:scale-95 transition-all">LANCER LA MISSION</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mb-8 overflow-x-auto">
+            <table class="premium-table">
+                <thead>
+                    <tr class="text-navy/50">
+                        <th class="text-left">Tâche & Description</th>
+                        <th class="text-left">Assigné à</th>
+                        <th class="text-center">Shift</th>
+                        <th class="text-center">Période</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    <tr *ngFor="let task of tasks" class="group">
+                        <td class="max-w-md">
+                            <div class="font-bold text-navy truncate">{{ task.titre }}</div>
+                            <div class="text-[10px] text-gray-400 line-clamp-1 italic">{{ task.description }}</div>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-gray-600">{{ getStaffMemberName(task.idEmploye) }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{{ task.typeShift }}</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="text-[10px] font-bold text-gray-500">{{ task.dateDebut }}</div>
+                            <div class="text-[9px] text-gray-300">au</div>
+                            <div class="text-[10px] font-bold text-gray-500">{{ task.dateFin }}</div>
+                        </td>
+                        <td class="text-center">
+                            <span [ngClass]="getStatutBadgeClass(task.statut)" class="badge-premium">{{ task.statut }}</span>
+                        </td>
+                        <td class="text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button (click)="openEditTaskModal(task)" class="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider">
+                                    Modifier
+                                </button>
+                                <button (click)="deleteTask(task.idTache)" class="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider">
+                                    Supprimer
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div *ngIf="tasks.length === 0" class="bg-white/50 backdrop-blur-sm rounded-2xl border border-dashed border-navy/10 p-20 text-center">
+                <div class="w-20 h-20 bg-navy/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-4xl grayscale opacity-30">✓</span>
+                </div>
+                <h3 class="serif text-xl text-navy/40 mb-2">Aucune tâche en cours</h3>
+                <p class="text-gray-400 text-sm max-w-xs mx-auto">Toutes les opérations sont à jour. Ajoutez une nouvelle tâche pour assigner votre équipe.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEAVES TAB -->
+    <div *ngIf="activeTab === 'conges'" class="animate-slide-up">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="serif text-3xl text-navy">Absences & Congés</h1>
+                <p class="text-xs text-gray-500 uppercase tracking-widest mt-1">Calendrier & Disponibilités</p>
+            </div>
+            <button (click)="openAddLeaveModal()" class="btn-gold px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg shadow-gold/20 flex items-center gap-2">
+                <span class="text-lg">+</span> Demander un congé
+            </button>
+        </div>
+
+        <!-- Modal d'ajout de congé -->
+        <div *ngIf="isAddLeaveModalVisible" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-2xl premium-modal w-full max-w-2xl overflow-hidden animate-slide-up">
+                <div class="modal-header-gradient p-6 text-white relative">
+                    <h2 class="serif text-2xl">Planification d'Absence</h2>
+                    <p class="text-xs text-white/70 uppercase tracking-widest mt-1">Saisie de demande</p>
+                    <button (click)="closeAddLeaveModal()" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">✕</button>
+                </div>
+                
+                <form (ngSubmit)="saveLeave()" class="p-8">
+                    <div class="grid grid-cols-2 gap-5 mb-5">
+                        <div>
+                            <label class="form-label-premium">Date de début</label>
+                            <input [(ngModel)]="newLeave.dateDebut" name="dateDebut" type="date" class="w-full input-premium" required>
+                        </div>
+                        <div>
+                            <label class="form-label-premium">Date de fin</label>
+                            <input [(ngModel)]="newLeave.dateFin" name="dateFin" type="date" class="w-full input-premium" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-5 mb-8">
+                        <div>
+                            <label class="form-label-premium">Type de congé</label>
+                            <select [(ngModel)]="newLeave.type" name="type" class="w-full input-premium" required>
+                                <option value="">-- Sélectionner le type --</option>
+                                <option value="Congé payé">Congé payé</option>
+                                <option value="Congé sans solde">Congé sans solde</option>
+                                <option value="Congé maladie">Congé maladie</option>
+                                <option value="Congé maternité">Congé maternité</option>
+                                <option value="Congé paternité">Congé paternité</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label-premium">Concernant l'employé</label>
+                            <select [(ngModel)]="newLeave.idEmploye" name="idEmploye" class="w-full input-premium" required>
+                                <option [value]="undefined">-- Sélectionner --</option>
+                                <option *ngFor="let member of staff" [value]="member.idEmploye">{{ member.name }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between space-x-3 pt-6 border-t border-gray-100">
+                        <button type="button" (click)="closeAddLeaveModal()" class="px-6 py-2.5 text-sm font-semibold text-gray-400 hover:text-navy transition-colors">ANNULER</button>
+                        <button type="submit" class="btn-primary px-8 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-navy/20 active:scale-95 transition-all">SOUMETTRE LA DEMANDE</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <table class="premium-table">
+                <thead>
+                    <tr class="text-navy/50">
+                        <th class="text-left">Personnel</th>
+                        <th class="text-left">Nature de l'absence</th>
+                        <th class="text-center">Dates</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-right">Actions administratives</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    <tr *ngFor="let leave of leaves" class="group">
+                        <td>
+                            <div class="font-bold text-navy">{{ getStaffMemberName(leave.idEmploye) }}</div>
+                        </td>
+                        <td>
+                            <span class="text-sm font-medium text-gray-600">{{ leave.type }}</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="inline-flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                                <span class="text-[10px] font-bold text-navy">{{ leave.dateDebut }}</span>
+                                <span class="text-gray-300">→</span>
+                                <span class="text-[10px] font-bold text-navy">{{ leave.dateFin }}</span>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span [ngClass]="getLeaveStatutBadgeClass(leave.statut)" class="badge-premium">{{ leave.statut }}</span>
+                        </td>
+                        <td class="text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <button *ngIf="leave.statut === 'EN_ATTENTE'" (click)="approveLeave(leave.idConge)" class="px-3 py-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider">
+                                    Approuver
+                                </button>
+                                <button *ngIf="leave.statut === 'EN_ATTENTE'" (click)="refuseLeave(leave.idConge)" class="px-3 py-1.5 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider">
+                                    Refuser
+                                </button>
+                                <button (click)="openEditLeaveModal(leave)" class="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider">
+                                    Modifier
+                                </button>
+                                <button (click)="deleteLeave(leave.idConge)" class="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider">
+                                    Supprimer
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div *ngIf="leaves.length === 0" class="bg-white/50 backdrop-blur-sm rounded-2xl border border-dashed border-navy/10 p-20 text-center">
+                <div class="w-20 h-20 bg-navy/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="text-4xl grayscale opacity-30">🏖️</span>
+                </div>
+                <h3 class="serif text-xl text-navy/40 mb-2">Aucune absence enregistrée</h3>
+                <p class="text-gray-400 text-sm max-w-xs mx-auto">Le planning de présence est complet. Toutes les demandes seront affichées ici.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MODIFICATION TACHE -->
+    <div *ngIf="isEditTaskModalVisible" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl premium-modal w-full max-w-2xl overflow-hidden animate-slide-up">
+            <div class="modal-header-gradient p-6 text-white relative">
+                <h2 class="serif text-2xl">Modifier la Mission</h2>
+                <p class="text-xs text-white/70 uppercase tracking-widest mt-1">Édition des détails</p>
+                <button (click)="closeEditTaskModal()" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">✕</button>
+            </div>
+            
+            <form (ngSubmit)="updateTask()" class="p-8">
+                <div class="mb-5">
+                    <label class="form-label-premium">Titre de la tâche</label>
+                    <input [(ngModel)]="editingTask.titre" name="edit_titre" class="w-full input-premium font-semibold" required>
+                </div>
+
+                <div class="mb-5">
+                    <label class="form-label-premium">Instructions détaillées</label>
+                    <textarea [(ngModel)]="editingTask.description" name="edit_description" class="w-full input-premium h-28" required></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label class="form-label-premium">Date de début</label>
+                        <input [(ngModel)]="editingTask.dateDebut" name="edit_dateDebut" type="date" class="w-full input-premium" required>
+                    </div>
+                    <div>
+                        <label class="form-label-premium">Date d'échéance</label>
+                        <input [(ngModel)]="editingTask.dateFin" name="edit_dateFin" type="date" class="w-full input-premium" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-5 mb-8">
+                    <div>
+                        <label class="form-label-premium">Type de service (Shift)</label>
+                        <select [(ngModel)]="editingTask.typeShift" name="edit_typeShift" class="w-full input-premium">
+                            <option *ngFor="let shift of typeShiftOptions" [value]="shift">{{ shift }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label-premium">Assigner au personnel</label>
+                        <select [(ngModel)]="editingTask.idEmploye" name="edit_idEmploye" class="w-full input-premium" required>
+                            <option *ngFor="let member of staff" [value]="member.idEmploye">{{ member.name }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between space-x-3 pt-6 border-t border-gray-100">
+                    <button type="button" (click)="closeEditTaskModal()" class="px-6 py-2.5 text-sm font-semibold text-gray-400 hover:text-navy transition-colors">ANNULER</button>
+                    <button type="submit" class="btn-primary px-8 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-navy/20 active:scale-95 transition-all">METTRE À JOUR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL MODIFICATION CONGÉ -->
+    <div *ngIf="isEditLeaveModalVisible" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl premium-modal w-full max-w-2xl overflow-hidden animate-slide-up">
+            <div class="modal-header-gradient p-6 text-white relative">
+                <h2 class="serif text-2xl">Modifier le Congé</h2>
+                <p class="text-xs text-white/70 uppercase tracking-widest mt-1">Ajustement du planning</p>
+                <button (click)="closeEditLeaveModal()" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">✕</button>
+            </div>
+            
+            <form (ngSubmit)="updateLeave()" class="p-8">
+                <div class="grid grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label class="form-label-premium">Date de début</label>
+                        <input [(ngModel)]="editingLeave.dateDebut" name="edit_leave_dateDebut" type="date" class="w-full input-premium" required>
+                    </div>
+                    <div>
+                        <label class="form-label-premium">Date de fin</label>
+                        <input [(ngModel)]="editingLeave.dateFin" name="edit_leave_dateFin" type="date" class="w-full input-premium" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-5 mb-8">
+                    <div>
+                        <label class="form-label-premium">Type de congé</label>
+                        <select [(ngModel)]="editingLeave.type" name="edit_leave_type" class="w-full input-premium" required>
+                            <option value="Congé payé">Congé payé</option>
+                            <option value="Congé sans solde">Congé sans solde</option>
+                            <option value="Congé maladie">Congé maladie</option>
+                            <option value="Congé maternité">Congé maternité</option>
+                            <option value="Congé paternité">Congé paternité</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label-premium">Employé</label>
+                        <select [(ngModel)]="editingLeave.idEmploye" name="edit_leave_idEmploye" class="w-full input-premium" required>
+                            <option *ngFor="let member of staff" [value]="member.idEmploye">{{ member.name }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between space-x-3 pt-6 border-t border-gray-100">
+                    <button type="button" (click)="closeEditLeaveModal()" class="px-6 py-2.5 text-sm font-semibold text-gray-400 hover:text-navy transition-colors">ANNULER</button>
+                    <button type="submit" class="btn-primary px-8 py-2.5 rounded-xl text-sm font-bold shadow-xl shadow-navy/20 active:scale-95 transition-all">METTRE À JOUR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

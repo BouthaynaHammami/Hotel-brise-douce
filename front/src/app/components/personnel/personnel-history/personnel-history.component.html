@@ -1,0 +1,74 @@
+<h2 class="serif text-3xl font-light mb-6" style="color:var(--navy)">Historique</h2>
+
+<!-- LOADING STATE -->
+<div *ngIf="isLoading" class="card p-12 text-center">
+    <p class="text-gray-500">Chargement de votre historique...</p>
+</div>
+
+<!-- TACHES TERMINEES SECTION -->
+<div *ngIf="!isLoading && completedTasks.length > 0" class="mb-8">
+    <h3 class="text-lg font-semibold mb-4" style="color:var(--navy)">Tâches terminées</h3>
+    <div class="card overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr style="background:var(--navy)">
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Titre</th>
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Description</th>
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Date début</th>
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Date fin</th>
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Statut</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                <tr *ngFor="let t of completedTasks" class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium text-navy">{{ t.titre }}</td>
+                    <td class="px-4 py-3 text-gray-500 text-xs">{{ t.description }}</td>
+                    <td class="px-4 py-3 text-gray-500 text-xs">{{ t.dateDebut }}</td>
+                    <td class="px-4 py-3 text-gray-500 text-xs">{{ t.dateFin }}</td>
+                    <td class="px-4 py-3">
+                        <span class="badge-green px-2 py-1 rounded-full text-xs font-bold tracking-tight shadow-sm">
+                            Terminé
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- INTERVENTIONS SECTION -->
+<div *ngIf="!isLoading && entries.length > 0">
+    <h3 *ngIf="completedTasks.length > 0" class="text-lg font-semibold mb-4" style="color:var(--navy)">Interventions</h3>
+    <div class="card overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr style="background:var(--navy)">
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Chambre</th>
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Type</th>
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Date</th>
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Durée</th>
+                    <th class="px-4 py-3 text-left text-white font-medium text-xs tracking-wider">Statut</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                <tr *ngFor="let e of entries" class="hover:bg-gray-50">
+                    <td class="px-4 py-3 font-medium">{{ e.room }}</td>
+                    <td class="px-4 py-3 text-gray-500">{{ e.type }}</td>
+                    <td class="px-4 py-3 text-gray-500 text-xs">{{ e.date }}</td>
+                    <td class="px-4 py-3 text-xs text-gray-600">{{ e.duration }}</td>
+                    <td class="px-4 py-3">
+                        <span [ngClass]="getStatusBadgeClass(e.status)" class="px-2 py-1 rounded-full text-xs font-bold tracking-tight shadow-sm">
+                            {{ getStatusLabel(e.status) }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- EMPTY STATE -->
+<div *ngIf="!isLoading && entries.length === 0 && completedTasks.length === 0" class="card p-12 text-center">
+    <div class="text-gray-300 text-4xl mb-3">📋</div>
+    <p class="text-gray-500 text-sm italic">Aucun historique pour le moment</p>
+</div>

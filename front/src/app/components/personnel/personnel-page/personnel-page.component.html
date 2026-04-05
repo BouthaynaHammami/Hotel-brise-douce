@@ -1,0 +1,8 @@
+<app-personnel-topbar></app-personnel-topbar>
+<app-personnel-nav [activeSection]="activeSection" (sectionChange)="onSectionChange($event)"></app-personnel-nav>
+<div class="max-w-4xl mx-auto px-6 py-8">
+    <app-personnel-tasks *ngIf="activeSection === 'mes-taches'"></app-personnel-tasks>
+    <app-personnel-history *ngIf="activeSection === 'historique'"></app-personnel-history>
+    <app-personnel-conges *ngIf="activeSection === 'conges'"></app-personnel-conges>
+    <app-personnel-profile *ngIf="activeSection === 'profil'"></app-personnel-profile>
+</div>

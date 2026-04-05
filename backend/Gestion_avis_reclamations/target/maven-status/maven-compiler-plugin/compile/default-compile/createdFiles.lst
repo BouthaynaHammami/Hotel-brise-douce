@@ -1,0 +1,9 @@
+tn\esprit\avis_reclamations_service\AvisReclamationsApplication.class
+tn\esprit\avis_reclamations_service\Services\ReclamationFeedbackService.class
+tn\esprit\avis_reclamations_service\entite\Statut.class
+tn\esprit\avis_reclamations_service\Repo\ReclamationFeedbackRepository.class
+tn\esprit\avis_reclamations_service\Controller\ReclamationFeedbackController.class
+tn\esprit\avis_reclamations_service\entite\ReclamationFeedback$ReclamationFeedbackBuilder.class
+tn\esprit\avis_reclamations_service\entite\TypeEntree.class
+tn\esprit\avis_reclamations_service\entite\Priorite.class
+tn\esprit\avis_reclamations_service\entite\ReclamationFeedback.class
