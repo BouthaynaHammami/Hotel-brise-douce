@@ -33,6 +33,7 @@ KEYCLOAK_ADMIN_PASSWORD  = os.getenv("KEYCLOAK_ADMIN_PASSWORD",     "admin")
 # Derived URLs
 _TOKEN_URL = f"{KEYCLOAK_BASE_URL}/realms/master/protocol/openid-connect/token"
 _USERS_URL = f"{KEYCLOAK_BASE_URL}/admin/realms/{KEYCLOAK_REALM}/users"
+_ROLES_URL = f"{KEYCLOAK_BASE_URL}/admin/realms/{KEYCLOAK_REALM}/roles"
 
 
 def _get_admin_token() -> str:
@@ -55,6 +56,91 @@ def _get_admin_token() -> str:
     return resp.json()["access_token"]
 
 
+def _get_realm_role(token: str, role_name: str) -> dict | None:
+    """
+    Fetch a realm role object by name.  Returns None if the role does not exist
+    in Keycloak (the caller decides how to handle that case).
+    """
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = httpx.get(f"{_ROLES_URL}/{role_name}", headers=headers, timeout=10)
+    if resp.status_code == 404:
+        return None
+    if resp.status_code != 200:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not retrieve role '{role_name}' from Keycloak: {resp.text}",
+        )
+    return resp.json()
+
+
+def _assign_realm_role(token: str, keycloak_user_id: str, role_name: str) -> None:
+    """
+    Assign a realm-level role to a Keycloak user.
+
+    If the role does not exist in Keycloak the assignment is silently skipped
+    (the role must be created in the Keycloak admin console first).
+    """
+    role = _get_realm_role(token, role_name)
+    if role is None:
+        # Role not yet defined in Keycloak — skip assignment silently.
+        return
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type":  "application/json",
+    }
+    role_mappings_url = f"{_USERS_URL}/{keycloak_user_id}/role-mappings/realm"
+    resp = httpx.post(role_mappings_url, json=[role], headers=headers, timeout=10)
+    if resp.status_code not in (200, 204):
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not assign role '{role_name}' to Keycloak user: {resp.text}",
+        )
+
+
+def _get_keycloak_user_id_by_email(token: str, email: str) -> str | None:
+    """Look up a Keycloak user by email and return their Keycloak UUID."""
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = httpx.get(
+        _USERS_URL,
+        params={"email": email, "exact": "true"},
+        headers=headers,
+        timeout=10,
+    )
+    if resp.status_code != 200:
+        return None
+    users = resp.json()
+    return users[0]["id"] if users else None
+
+
+def _remove_realm_roles(token: str, keycloak_user_id: str, role_names: list[str]) -> None:
+    """
+    Remove a list of realm roles from a Keycloak user (best-effort).
+    Missing roles are silently ignored.
+    """
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type":  "application/json",
+    }
+    roles_to_remove = []
+    for name in role_names:
+        role = _get_realm_role(token, name)
+        if role:
+            roles_to_remove.append(role)
+
+    if not roles_to_remove:
+        return
+
+    role_mappings_url = f"{_USERS_URL}/{keycloak_user_id}/role-mappings/realm"
+    httpx.request(
+        "DELETE",
+        role_mappings_url,
+        json=roles_to_remove,
+        headers=headers,
+        timeout=10,
+    )
+
+
 def mirror_user_in_keycloak(
     email: str,
     plain_password: str,
@@ -63,7 +149,9 @@ def mirror_user_in_keycloak(
     role: str = "CLIENT",
 ) -> str | None:
     """
-    Create a user in Keycloak that mirrors the locally registered user.
+    Create a user in Keycloak that mirrors the locally registered user and
+    assign the matching realm role so that the JWT returned by Keycloak on
+    login contains the correct role inside ``realm_access.roles``.
 
     Parameters
     ----------
@@ -106,8 +194,12 @@ def mirror_user_in_keycloak(
     resp = httpx.post(_USERS_URL, json=user_payload, headers=headers, timeout=10)
 
     if resp.status_code == 409:
-        # User already exists in Keycloak — treat as idempotent success
-        return None
+        # User already exists in Keycloak — treat as idempotent success.
+        # Ensure the role is still assigned in case it was missed before.
+        existing_id = _get_keycloak_user_id_by_email(token, email)
+        if existing_id and role:
+            _assign_realm_role(token, existing_id, role)
+        return existing_id
 
     if resp.status_code != 201:
         raise HTTPException(
@@ -118,4 +210,35 @@ def mirror_user_in_keycloak(
     # Extract the new user's ID from the Location header
     location = resp.headers.get("Location", "")
     keycloak_user_id = location.rstrip("/").split("/")[-1] if location else None
+
+    # Assign the application realm role so it appears in realm_access.roles
+    if keycloak_user_id and role:
+        _assign_realm_role(token, keycloak_user_id, role)
+
     return keycloak_user_id
+
+
+def update_user_role_in_keycloak(email: str, old_role: str, new_role: str) -> None:
+    """
+    Replace a user's application realm role in Keycloak.
+
+    This keeps the Keycloak JWT in sync when an admin changes a user's role
+    via the local DB so that ``realm_access.roles`` in the next token reflects
+    the updated role.
+
+    Parameters
+    ----------
+    email    : the user's email (used to look up their Keycloak account)
+    old_role : role name to remove (e.g. ``"CLIENT"``)
+    new_role : role name to add   (e.g. ``"PERSONNEL"``)
+    """
+    token = _get_admin_token()
+    keycloak_user_id = _get_keycloak_user_id_by_email(token, email)
+    if not keycloak_user_id:
+        # User not found in Keycloak — nothing to update.
+        return
+
+    app_roles = ["ADMIN", "CLIENT", "PERSONNEL"]
+    roles_to_remove = [r for r in app_roles if r != new_role]
+    _remove_realm_roles(token, keycloak_user_id, roles_to_remove)
+    _assign_realm_role(token, keycloak_user_id, new_role)

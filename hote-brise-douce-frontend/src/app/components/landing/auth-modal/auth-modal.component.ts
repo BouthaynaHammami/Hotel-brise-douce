@@ -62,6 +62,11 @@ export class AuthModalComponent {
           next: () => {
             this.close();
             this.redirectUser();
+          },
+          error: (err) => {
+            this.errorMessage = 'Compte créé, mais la connexion automatique a échoué. Veuillez vous connecter manuellement.';
+            console.error(err);
+            this.switchTab('login');
           }
         });
       },

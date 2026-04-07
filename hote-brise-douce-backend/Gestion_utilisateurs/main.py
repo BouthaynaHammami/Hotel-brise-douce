@@ -11,7 +11,7 @@ import py_eureka_client.eureka_client as eureka_client
 
 import models, schemas, crud, auth
 from database import engine, get_db
-from keycloak_client import mirror_user_in_keycloak
+from keycloak_client import mirror_user_in_keycloak, update_user_role_in_keycloak
 
 # ── DB bootstrap ─────────────────────────────────────────────────────────────
 models.Base.metadata.create_all(bind=engine)
@@ -176,9 +176,29 @@ def get_users(db: Session = Depends(get_db)):
 
 @app.put("/users/{user_id}/role", response_model=schemas.UtilisateurResponse, tags=["Admin"])
 def update_role(user_id: int, role: schemas.RoleUpdate, db: Session = Depends(get_db)):
+    # Fetch the user before update to capture their current role for Keycloak sync
+    existing_user = crud.get_user(db, user_id)
+    if not existing_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    old_role = existing_user.role.value if existing_user.role else None
+
     user = crud.update_user_role_admin(db, user_id, role)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Sync the new role to Keycloak so the next JWT contains the updated
+    # realm_access.roles and the frontend reads the correct role.
+    try:
+        update_user_role_in_keycloak(
+            email=user.email,
+            old_role=old_role or "",
+            new_role=role.role.value,
+        )
+    except Exception:
+        # Role sync failure is non-fatal — the local DB is the source of truth.
+        pass
+
     return user
 
 

@@ -27,13 +27,17 @@ export class AuthService {
       .set('client_id', this.keycloakClientId)
       .set('username', username)
       .set('password', password)
-      .set('scope', 'openid offline_access');
+      // Include 'email' and 'profile' scopes so the JWT contains the email
+      // and preferred_username claims needed by the backend and UI.
+      .set('scope', 'openid email profile offline_access');
 
     return this.http.post<any>(this.keycloakTokenUrl, body.toString(), {
       headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
     }).pipe(
       tap(response => {
-        this.setSession(response.access_token);
+        if (response?.access_token) {
+          this.setSession(response.access_token);
+        }
         this.currentUserSubject.next(this.getUserFromToken());
       })
     );
@@ -54,7 +58,11 @@ export class AuthService {
 
   private setSession(token: string): void {
     if (this.isBrowser) {
-      localStorage.setItem('token', token);
+      try {
+        localStorage.setItem('token', token);
+      } catch (e) {
+        console.error('Could not persist token to localStorage:', e);
+      }
     }
   }
 
@@ -79,6 +87,15 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  // Returns the user's email from the Keycloak token.
+  // Keycloak includes the email under the 'email' claim (when the 'email'
+  // scope is requested) and always provides 'preferred_username'.
+  getEmail(): string | null {
+    const user = this.getUserFromToken();
+    if (!user) return null;
+    return user.email ?? user.preferred_username ?? null;
   }
 
   getRole(): RoleEnum | null {

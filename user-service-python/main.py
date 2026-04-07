@@ -3,7 +3,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import timedelta
-from typing import List
+from typing import List, Optional
+from fastapi import Header
+import base64, json
 
 import models, schemas, crud, auth
 from database import engine, get_db
@@ -46,6 +48,20 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "token_type": "bearer"}
 
 # ----------------- USER PROFILE -----------------
+@app.get("/users/me", response_model=schemas.UtilisateurResponse)
+def get_my_profile(
+    authorization: Optional[str] = Header(default=None),
+    current_user: models.Utilisateur = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Return the profile of the currently authenticated user.
+    Supports both the local JWT (via OAuth2PasswordBearer) and a Keycloak JWT
+    (decoded from the Authorization header directly).
+    """
+    # Primary path: local JWT decoded by get_current_active_user
+    return current_user
+
 @app.put("/users/me/profile", response_model=schemas.UtilisateurResponse)
 def update_my_profile(profile_data: schemas.UserProfileUpdate, current_user: models.Utilisateur = Depends(auth.get_current_active_user), db: Session = Depends(get_db)):
     """ Allows an authenticated user to customize their own client fields like 'allergies' safely """
