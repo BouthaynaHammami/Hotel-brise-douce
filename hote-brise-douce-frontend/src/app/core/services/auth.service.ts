@@ -18,6 +18,7 @@ export class AuthService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
+  // Initialise with whatever is already in storage (handles page refresh)
   private currentUserSubject = new BehaviorSubject<any>(this.getUserFromToken());
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -33,8 +34,15 @@ export class AuthService {
       headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
     }).pipe(
       tap(response => {
+        // ① Remove the old token first so no stale data can be read mid-update
+        if (this.isBrowser) {
+          localStorage.removeItem('token');
+        }
+        // ② Persist the brand-new token
         this.setSession(response.access_token);
-        this.currentUserSubject.next(this.getUserFromToken());
+        // ③ Decode the freshly-stored token and push to all subscribers
+        const decoded = this.getUserFromToken();
+        this.currentUserSubject.next(decoded);
       })
     );
   }
@@ -62,6 +70,10 @@ export class AuthService {
     return this.isBrowser ? localStorage.getItem('token') : null;
   }
 
+  /**
+   * Always decodes the token that is CURRENTLY in localStorage.
+   * Never relies on a previously cached value.
+   */
   getUserFromToken(): any {
     const token = this.getToken();
     if (!token) return null;
@@ -78,14 +90,26 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    if (!token) return false;
+
+    // Also check token expiry
+    try {
+      const decoded = this.getUserFromToken();
+      if (!decoded?.exp) return true;
+      // exp is in seconds; Date.now() is in ms
+      return decoded.exp * 1000 > Date.now();
+    } catch {
+      return false;
+    }
   }
 
   getRole(): RoleEnum | null {
+    // Always read fresh from storage — never from a potentially stale BehaviorSubject snapshot
     const user = this.getUserFromToken();
     if (!user) return null;
 
-    // Keycloak puts roles in realm_access.roles, not a top-level 'role' field
+    // Keycloak puts roles in realm_access.roles
     const realmRoles: string[] = user?.realm_access?.roles ?? [];
     if (realmRoles.includes('ADMIN')) return RoleEnum.ADMIN;
     if (realmRoles.includes('PERSONNEL')) return RoleEnum.PERSONNEL;
