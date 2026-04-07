@@ -1,0 +1,28 @@
+<div class="flex justify-end mb-6">
+    <button class="btn-primary px-4 py-2 rounded text-sm">+ Ajouter un employé</button>
+</div>
+<div class="card overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr>
+                <th class="px-4 py-3 text-left">Nom</th>
+                <th class="px-4 py-3 text-left">Poste</th>
+                <th class="px-4 py-3 text-left">Contact</th>
+                <th class="px-4 py-3 text-left">Tâches actives</th>
+                <th class="px-4 py-3 text-left">Statut</th>
+                <th class="px-4 py-3 text-left">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+            <tr *ngFor="let s of staff" class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-medium">{{ s.name }}</td>
+                <td class="px-4 py-3 text-gray-500">{{ s.role }}</td>
+                <td class="px-4 py-3 text-gray-500">{{ s.contact }}</td>
+                <td class="px-4 py-3">{{ s.tasks }}</td>
+                <td class="px-4 py-3"><span [ngClass]="s.badge" class="px-2 py-1 rounded-full text-xs">{{ s.status
+                        }}</span></td>
+                <td class="px-4 py-3"><button class="text-blue-600 hover:underline text-xs">Voir</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>

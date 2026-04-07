@@ -1,0 +1,9 @@
+<app-client-topbar></app-client-topbar>
+<app-client-nav [activePage]="activePage" (pageChange)="onPageChange($event)"></app-client-nav>
+<div class="max-w-5xl mx-auto px-6 py-8">
+    <app-client-home *ngIf="activePage === 'accueil'" (navigate)="onPageChange($any($event))"></app-client-home>
+    <app-client-booking *ngIf="activePage === 'reservation'"
+        (confirmed)="onReservationConfirmed()"></app-client-booking>
+    <app-client-reservations *ngIf="activePage === 'mes-reservations'"></app-client-reservations>
+    <app-client-complaint *ngIf="activePage === 'reclamation'"></app-client-complaint>
+</div>

@@ -1,0 +1,37 @@
+<aside class="sidebar fixed left-0 top-0 h-full z-30 flex flex-col">
+    <div class="p-6 border-b" style="border-color: rgba(255,255,255,0.1)">
+        <p class="serif text-white text-lg tracking-widest">BRICE DOUCE</p>
+        <p class="text-blue-400 text-xs mt-1">Back Office</p>
+    </div>
+    <nav class="flex-1 py-4">
+        <div class="px-3 mb-2">
+            <p class="text-blue-400 text-xs tracking-widest uppercase px-3 mb-2">Gestion</p>
+            <button *ngFor="let item of navItems" (click)="navigate(item.id)"
+                class="nav-item w-full text-left px-3 py-2 rounded text-sm flex items-center gap-3 mb-1"
+                [class.active]="activeSection === item.id" [class.text-blue-300]="activeSection !== item.id"
+                [class.text-white]="activeSection === item.id">
+                <span>{{ item.icon }}</span> {{ item.label }}
+            </button>
+        </div>
+    </nav>
+    <div class="p-4 border-t" style="border-color: rgba(255,255,255,0.1)">
+        <div *ngIf="currentUser" class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" (click)="openProfile()" title="Mettre à jour mon profil">
+            <div
+                class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-white text-xs font-bold">
+                {{ getInitials() }}</div>
+            <div>
+                <p class="text-white text-xs font-medium">{{ currentUser.prenom }} {{ currentUser.nom }}</p>
+                <p class="text-blue-400 text-xs">{{ currentUser.email }}</p>
+            </div>
+        </div>
+        <div *ngIf="!currentUser" class="text-gray-400 text-xs px-2">Chargement...</div>
+    </div>
+</aside>
+
+<app-update-profile 
+    *ngIf="currentUser"
+    [user]="currentUser"
+    [visible]="isProfileModalVisible"
+    (close)="closeProfile()"
+    (profileUpdated)="onProfileUpdated($event)">
+</app-update-profile>

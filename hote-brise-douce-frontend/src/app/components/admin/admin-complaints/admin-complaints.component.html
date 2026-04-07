@@ -1,0 +1,30 @@
+<div class="card overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr>
+                <th class="px-4 py-3 text-left">N°</th>
+                <th class="px-4 py-3 text-left">Client</th>
+                <th class="px-4 py-3 text-left">Chambre</th>
+                <th class="px-4 py-3 text-left">Objet</th>
+                <th class="px-4 py-3 text-left">Date</th>
+                <th class="px-4 py-3 text-left">Priorité</th>
+                <th class="px-4 py-3 text-left">Statut</th>
+                <th class="px-4 py-3 text-left">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+            <tr *ngFor="let c of complaints" class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-medium">{{ c.ref }}</td>
+                <td class="px-4 py-3">{{ c.client }}</td>
+                <td class="px-4 py-3">{{ c.room }}</td>
+                <td class="px-4 py-3">{{ c.subject }}</td>
+                <td class="px-4 py-3">{{ c.date }}</td>
+                <td class="px-4 py-3"><span [ngClass]="c.priBadge" class="px-2 py-1 rounded-full text-xs">{{ c.priority
+                        }}</span></td>
+                <td class="px-4 py-3"><span [ngClass]="c.stBadge" class="px-2 py-1 rounded-full text-xs">{{ c.status
+                        }}</span></td>
+                <td class="px-4 py-3"><button class="text-blue-600 hover:underline text-xs">Traiter</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
