@@ -19,8 +19,11 @@ application.properties:
 """
 
 import os
+import logging
 import httpx
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 # ── Keycloak coordinates (must match Gateway's issuer-uri) ──────────────────
 KEYCLOAK_BASE_URL        = os.getenv("KEYCLOAK_BASE_URL",           "http://localhost:8080")
@@ -82,7 +85,13 @@ def _assign_realm_role(token: str, keycloak_user_id: str, role_name: str) -> Non
     """
     role = _get_realm_role(token, role_name)
     if role is None:
-        # Role not yet defined in Keycloak — skip assignment silently.
+        # Role not yet defined in Keycloak — warn so admins know it needs to be created.
+        logger.warning(
+            "Realm role '%s' does not exist in Keycloak realm '%s'. "
+            "Create it in the Keycloak Admin Console so it can be assigned to users.",
+            role_name,
+            KEYCLOAK_REALM,
+        )
         return
 
     headers = {

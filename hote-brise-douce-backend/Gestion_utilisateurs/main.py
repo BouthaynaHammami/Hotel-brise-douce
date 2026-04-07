@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
@@ -12,6 +13,8 @@ import py_eureka_client.eureka_client as eureka_client
 import models, schemas, crud, auth
 from database import engine, get_db
 from keycloak_client import mirror_user_in_keycloak, update_user_role_in_keycloak
+
+logger = logging.getLogger(__name__)
 
 # ── DB bootstrap ─────────────────────────────────────────────────────────────
 models.Base.metadata.create_all(bind=engine)
@@ -195,9 +198,10 @@ def update_role(user_id: int, role: schemas.RoleUpdate, db: Session = Depends(ge
             old_role=old_role or "",
             new_role=role.role.value,
         )
-    except Exception:
+    except Exception as exc:
         # Role sync failure is non-fatal — the local DB is the source of truth.
-        pass
+        # Log a warning so administrators can diagnose Keycloak connectivity issues.
+        logger.warning("Keycloak role sync failed for user '%s': %s", user.email, exc)
 
     return user
 
