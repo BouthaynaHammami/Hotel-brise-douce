@@ -1,0 +1,24 @@
+<h2 class="serif text-3xl font-light mb-6" style="color:var(--navy)">Mes réservations</h2>
+<div *ngFor="let r of reservations; let i = index" class="card p-6 mb-4"
+    [style.border-left]="i === 0 ? '4px solid var(--gold)' : ''" [class.opacity-70]="r.status === 'Passé'">
+    <div class="flex justify-between items-start">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <h3 class="font-semibold" [class.text-gray-500]="r.status === 'Passé'"
+                    [style.color]="r.status !== 'Passé' ? 'var(--navy)' : ''">{{ r.room }}</h3>
+                <span [ngClass]="r.badge" class="px-2 py-0.5 rounded-full text-xs">{{ r.status }}</span>
+            </div>
+            <p class="text-sm text-gray-500">{{ r.dates }}</p>
+            <div class="flex gap-4 mt-3 text-xs text-gray-400">
+                <span>📋 Réf. {{ r.ref }}</span>
+                <span>💳 {{ r.amount }}</span>
+                <span *ngIf="r.pax">👥 {{ r.pax }}</span>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button class="border border-gray-200 px-4 py-2 rounded-lg text-xs hover:bg-gray-50">Détails</button>
+            <button *ngIf="r.canCancel"
+                class="border border-red-200 text-red-500 px-4 py-2 rounded-lg text-xs hover:bg-red-50">Annuler</button>
+        </div>
+    </div>
+</div>

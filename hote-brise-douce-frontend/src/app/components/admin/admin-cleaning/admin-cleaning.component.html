@@ -1,0 +1,130 @@
+<div class="flex justify-between items-center mb-6">
+    <p class="text-gray-500 text-sm">Assignez le personnel aux chambres pour nettoyage ou maintenance.</p>
+    <button (click)="openModal()" class="btn-primary px-4 py-2 rounded text-sm">+ Nouvelle intervention</button>
+</div>
+
+<div class="card overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr>
+                <th class="px-4 py-3 text-left">Chambre</th>
+                <th class="px-4 py-3 text-left">Type</th>
+                <th class="px-4 py-3 text-left">Personnel assigné</th>
+                <th class="px-4 py-3 text-left">Date planifiée</th>
+                <th class="px-4 py-3 text-left">Priorité</th>
+                <th class="px-4 py-3 text-left">Statut</th>
+                <th class="px-4 py-3 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+            <tr *ngFor="let t of tasks" class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-medium">{{ t.chambreNumero ?? '—' }}</td>
+                <td class="px-4 py-3">{{ t.typeIntervention }}</td>
+                <td class="px-4 py-3">{{ t.personnelNom || 'Non assigné' }}</td>
+                <td class="px-4 py-3">{{ (t.datePlanification | date:'dd/MM/yyyy') || '—' }}</td>
+                <td class="px-4 py-3">
+                    <span [ngClass]="getBadgeClassForPriority(t.priorite)"
+                        class="px-2 py-1 rounded-full text-xs font-medium">{{ t.priorite }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    <span [ngClass]="getBadgeClassForStatus(t.status)"
+                        class="px-2 py-1 rounded-full text-xs font-medium">{{ labelForStatus(t.status) }}</span>
+                </td>
+                <td class="px-4 py-3 text-right flex gap-2 justify-end">
+                    <button class="text-blue-500 hover:text-blue-700" (click)="openEditModal(t)" title="Modifier">✏️</button>
+                    <button class="text-red-500 hover:text-red-700" (click)="deleteTask(t.idIntervention)" title="Supprimer">🗑️</button>
+                </td>
+            </tr>
+            <tr *ngIf="tasks.length === 0">
+                <td colspan="7" class="px-4 py-8 text-center text-gray-500">Aucune intervention trouvée.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Créer / Modifier intervention -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.5)">
+    <div class="bg-white rounded-2xl w-full max-w-lg p-7 shadow-2xl max-h-screen overflow-y-auto">
+        <div class="flex justify-between items-center mb-5">
+            <h3 class="font-semibold" style="color:var(--navy)">{{ editMode ? 'Modifier' : 'Nouvelle' }} intervention</h3>
+            <button (click)="closeModal()" class="text-gray-400 text-xl font-bold bg-transparent border-0 hover:text-gray-700">✕</button>
+        </div>
+        <div class="space-y-4 text-sm">
+
+            <!-- Chambre -->
+            <div>
+                <label class="block text-gray-500 mb-1">Numéro de Chambre</label>
+                <input type="number" [(ngModel)]="newTask.chambreNumero"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Ex: 101">
+            </div>
+
+            <!-- Type -->
+            <div>
+                <label class="block text-gray-500 mb-1">Type d'intervention</label>
+                <select [(ngModel)]="newTask.typeIntervention"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 bg-white">
+                    <option *ngFor="let t of typeOptions" [value]="t">{{ t }}</option>
+                </select>
+            </div>
+
+            <!-- Personnel -->
+            <div>
+                <label class="block text-gray-500 mb-1">Personnel assigné</label>
+                <select [(ngModel)]="newTask.personnelId" class="w-full border border-gray-200 rounded-lg px-3 py-2 bg-white">
+                    <option [ngValue]="null">-- Non assigné --</option>
+                    <option *ngFor="let p of personnels" [value]="p.idUtilisateur">{{ p.prenom }} {{ p.nom }}</option>
+                </select>
+            </div>
+
+            <!-- Priorité -->
+            <div>
+                <label class="block text-gray-500 mb-1">Priorité</label>
+                <select [(ngModel)]="newTask.priorite" class="w-full border border-gray-200 rounded-lg px-3 py-2 bg-white">
+                    <option *ngFor="let p of prioriteOptions" [value]="p">{{ p }}</option>
+                </select>
+            </div>
+
+            <!-- Statut (admin can set any status) -->
+            <div>
+                <label class="block text-gray-500 mb-1">Statut</label>
+                <select [(ngModel)]="newTask.status" class="w-full border border-gray-200 rounded-lg px-3 py-2 bg-white">
+                    <option *ngFor="let s of statusOptions" [value]="s">{{ labelForStatus(s) }}</option>
+                </select>
+            </div>
+
+            <!-- Date planifiée -->
+            <div>
+                <label class="block text-gray-500 mb-1">Date planifiée</label>
+                <input type="date" [(ngModel)]="newTask.datePlanification"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-gray-500 mb-1">Description</label>
+                <textarea [(ngModel)]="newTask.description" rows="2"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 resize-none focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Décrivez l'intervention…"></textarea>
+            </div>
+
+            <!-- Note admin -->
+            <div>
+                <label class="block text-gray-500 mb-1">Note interne</label>
+                <textarea [(ngModel)]="newTask.note" rows="2"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 resize-none focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Instructions particulières pour le personnel…"></textarea>
+            </div>
+
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button (click)="closeModal()"
+                class="flex-1 border border-gray-200 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">Annuler</button>
+            <button (click)="saveTask()" [disabled]="!newTask.typeIntervention"
+                [class.opacity-50]="!newTask.typeIntervention"
+                class="flex-1 btn-primary rounded-lg py-2 text-sm font-medium transition-colors">
+                {{ editMode ? 'Enregistrer les modifications' : 'Créer l\'intervention' }}
+            </button>
+        </div>
+    </div>
+</div>

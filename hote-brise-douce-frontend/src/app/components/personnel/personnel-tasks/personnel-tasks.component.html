@@ -1,0 +1,76 @@
+<!-- STATS RAPIDES -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
+    <div *ngFor="let s of stats" class="card p-4 text-center">
+        <p class="serif text-3xl font-light {{ s.color }}">{{ s.value }}</p>
+        <p class="text-xs text-gray-500 mt-1">{{ s.label }}</p>
+    </div>
+</div>
+
+<!-- ÉTAT DE CHARGEMENT -->
+<div *ngIf="loading" class="text-center py-8 text-gray-400 text-sm">Chargement des tâches…</div>
+<div *ngIf="error" class="text-center py-8 text-red-500 text-sm">{{ error }}</div>
+
+<!-- FILTRES -->
+<div class="flex items-center justify-between mb-5" *ngIf="!loading && !error">
+    <div class="flex gap-2 flex-wrap">
+        <button (click)="setFilter('all')" [class.active]="filter === 'all'"
+            class="filter-btn px-4 py-2 rounded-lg text-xs font-medium">Toutes</button>
+        <button (click)="setFilter(StatusIntervention.A_FAIRE)" [class.active]="filter === StatusIntervention.A_FAIRE"
+            class="filter-btn px-4 py-2 rounded-lg text-xs font-medium">À faire</button>
+        <button (click)="setFilter(StatusIntervention.EN_COURS)" [class.active]="filter === StatusIntervention.EN_COURS"
+            class="filter-btn px-4 py-2 rounded-lg text-xs font-medium">En cours</button>
+        <button (click)="setFilter(StatusIntervention.TERMINE)" [class.active]="filter === StatusIntervention.TERMINE"
+            class="filter-btn px-4 py-2 rounded-lg text-xs font-medium">Terminées</button>
+    </div>
+</div>
+
+<!-- LISTE DES TÂCHES -->
+<div class="space-y-4" *ngIf="!loading && !error">
+    <div *ngFor="let task of filteredTasks" class="card task-card p-5"
+        [class.task-progress]="task.status === StatusIntervention.EN_COURS"
+        [class.task-pending]="task.status === StatusIntervention.A_FAIRE"
+        [class.task-done]="task.status === StatusIntervention.TERMINE"
+        [class.opacity-60]="task.status === StatusIntervention.TERMINE">
+
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-xl">{{ getTaskIcon(task.typeIntervention, task.status) }}</span>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h3 class="font-semibold text-sm" style="color: var(--navy)">
+                                {{ task.typeIntervention }} — Chambre {{ task.chambreNumero ?? '?' }}
+                            </h3>
+                            <span [ngClass]="getBadgeClass(task.status)"
+                                class="px-2 py-0.5 rounded-full text-xs">{{ getBadgeLabel(task.status) }}</span>
+                            <span [ngClass]="getPriorityBadgeClass(task.priorite)"
+                                class="px-2 py-0.5 rounded-full text-xs">{{ task.priorite }}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            Planifiée : {{ (task.datePlanification | date:'dd/MM/yyyy') || '—' }}
+                        </p>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-600 mb-2 ml-9" *ngIf="task.description">{{ task.description }}</p>
+                <p class="text-xs text-amber-600 ml-9" *ngIf="task.note">📝 Note admin : {{ task.note }}</p>
+            </div>
+
+            <div class="ml-4 flex flex-col gap-2 items-end" *ngIf="task.status !== StatusIntervention.TERMINE">
+                <button (click)="openModal(task)" class="btn-primary px-4 py-2 rounded-lg text-xs">Mettre à
+                    jour</button>
+            </div>
+            <span *ngIf="task.status === StatusIntervention.TERMINE"
+                class="badge-green px-3 py-1 rounded-full text-xs ml-4">Terminé ✓</span>
+        </div>
+    </div>
+
+    <div *ngIf="filteredTasks.length === 0" class="text-center py-8 text-gray-400 text-sm">
+        Aucune tâche dans cette catégorie.
+    </div>
+</div>
+
+<!-- MODAL -->
+<app-personnel-task-modal *ngIf="modalOpen && selectedTask" [task]="selectedTask"
+    (saved)="onStatusSaved($event)" (closed)="onModalClosed()">
+</app-personnel-task-modal>
