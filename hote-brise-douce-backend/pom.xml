@@ -24,6 +24,7 @@
         <module>Gestion_avis_reclamations</module>
         <module>API_Gateway</module>
         <module>Discovery</module>
+        <module>ServerConfig</module>
     </modules>
 
     <properties>

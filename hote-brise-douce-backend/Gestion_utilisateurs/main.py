@@ -1,31 +1,43 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Form
+import base64
+import json
+from contextlib import asynccontextmanager
+from typing import List, Optional
+
+from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from datetime import timedelta
-from typing import List
 
 import py_eureka_client.eureka_client as eureka_client
 
 import models, schemas, crud, auth
 from database import engine, get_db
+from keycloak_client import mirror_user_in_keycloak
 
-# ======================
-# DB INIT
-# ======================
+# ── DB bootstrap ─────────────────────────────────────────────────────────────
 models.Base.metadata.create_all(bind=engine)
 
-# ======================
-# EUREKA CONFIG
-# ======================
+# ── Eureka config ─────────────────────────────────────────────────────────────
 EUREKA_SERVER = "http://localhost:8761/eureka/"
-APP_NAME = "UTILISATEURS-SERVICE"
+APP_NAME      = "UTILISATEURS-SERVICE"
 INSTANCE_PORT = 8000
 
-# ======================
-# FASTAPI INIT
-# ======================
-app = FastAPI(title="User Microservice")
 
+# ── App lifespan (startup / shutdown) ────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await eureka_client.init_async(
+        eureka_server=EUREKA_SERVER,
+        app_name=APP_NAME,
+        instance_port=INSTANCE_PORT,
+        instance_host="localhost",
+    )
+    yield
+    await eureka_client.stop_async()
+
+
+app = FastAPI(title="User Microservice – Hybrid Keycloak Mode", lifespan=lifespan)
+
+# ── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:4200"],
@@ -34,84 +46,66 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ======================
-# EUREKA REGISTER
-# ======================
-@app.on_event("startup")
-async def startup():
-    await eureka_client.init_async(
-        eureka_server=EUREKA_SERVER,
-        app_name=APP_NAME,
-        instance_port=INSTANCE_PORT,
-        instance_host="localhost"
-    )
 
-@app.on_event("shutdown")
-async def shutdown():
-    await eureka_client.stop_async()
+# ── JWT helper ────────────────────────────────────────────────────────────────
+def _email_from_bearer(authorization: Optional[str]) -> str:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Missing or malformed Authorization header")
 
-# ======================
-# HEALTH
-# ======================
-@app.get("/health")
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload_b64 = token.split(".")[1]
+        payload_b64 += "=" * (4 - len(payload_b64) % 4)
+        payload = json.loads(base64.b64decode(payload_b64))
+    except Exception:
+        raise HTTPException(status_code=401, detail="Could not decode token payload")
+
+    email = payload.get("email") or payload.get("preferred_username")
+    if not email:
+        raise HTTPException(
+            status_code=401,
+            detail="Token does not contain 'email' or 'preferred_username' claim. "
+                   "Enable the email claim in your Keycloak client mapper."
+        )
+    return email
+
+
+# ── Health / Info ─────────────────────────────────────────────────────────────
+@app.get("/health", tags=["Infra"])
 def health():
     return {"status": "UP"}
 
-@app.get("/info")
+@app.get("/info", tags=["Infra"])
 def info():
     return {"app": APP_NAME}
 
-# ======================
-# AUTH - FIXED LOGIN
-# ======================
-@app.post("/login", response_model=schemas.Token)
-def login(
-    username: str = Form(...),
-    password: str = Form(...),
-    db: Session = Depends(get_db)
-):
-    user = crud.get_user_by_email(db, username)
 
-    if not user or not auth.verify_password(password, user.motDePasse):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
-        )
-
-    access_token = auth.create_access_token(
-        data={"sub": user.email, "role": user.role, "idUtilisateur": user.idUtilisateur, "id": user.idUtilisateur},
-        expires_delta=timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
-
-# ======================
-# REGISTER
-# ======================
-@app.post("/register", response_model=schemas.UtilisateurResponse)
+# ── Registration ──────────────────────────────────────────────────────────────
+@app.post("/register", response_model=schemas.UtilisateurResponse, tags=["Auth"])
 def register(user: schemas.UserRegister, db: Session = Depends(get_db)):
     if crud.get_user_by_email(db, user.email):
         raise HTTPException(status_code=400, detail="Email already registered")
-    return crud.register_user(db, user)
 
-# ======================
-# PROFILE
-# ======================
-@app.put("/users/me/profile", response_model=schemas.UtilisateurResponse)
-def update_profile(
-    data: schemas.UserProfileUpdate,
-    current_user: models.Utilisateur = Depends(auth.get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    return crud.update_user_profile(db, current_user.idUtilisateur, data)
+    db_user = crud.register_user(db, user)
 
-# ======================
-# ADMIN SETUP
-# ======================
-@app.post("/setup-initial-admin")
+    try:
+        mirror_user_in_keycloak(
+            email=user.email,
+            plain_password=user.motDePasse,
+            first_name=user.prenom,
+            last_name=user.nom,
+            role=db_user.role.value,
+        )
+    except HTTPException as exc:
+        db.delete(db_user)
+        db.commit()
+        raise exc
+
+    return db_user
+
+
+# ── Admin setup (bootstrap only) ──────────────────────────────────────────────
+@app.post("/setup-initial-admin", tags=["Admin"])
 def setup_admin(db: Session = Depends(get_db)):
     if db.query(models.Utilisateur).first():
         return {"message": "Already initialized"}
@@ -122,52 +116,74 @@ def setup_admin(db: Session = Depends(get_db)):
         email="admin@hotel.com",
         motDePasse=auth.get_password_hash("admin123"),
         telephone="0000",
-        role=models.RoleEnum.ADMIN
+        role=models.RoleEnum.ADMIN,
     )
-
     db.add(admin)
     db.commit()
-
     return {"message": "Admin created (admin@hotel.com / admin123)"}
 
-# ======================
-# INTERNAL (service-to-service, no auth)
-# ======================
-@app.get("/users/internal", response_model=List[schemas.UtilisateurResponse])
+
+# ── Internal (service-to-service) ─────────────────────────────────────────────
+@app.get("/users/internal", response_model=List[schemas.UtilisateurResponse], tags=["Internal"])
 def get_users_internal(db: Session = Depends(get_db)):
-    """Public endpoint for internal microservice calls (no JWT required)."""
     return crud.get_users(db)
 
-# ======================
-# ADMIN ROUTES
-# ======================
-allow_admin = auth.RoleChecker([models.RoleEnum.ADMIN])
 
-@app.get("/users", response_model=List[schemas.UtilisateurResponse])
-def get_users(
-    current_user: models.Utilisateur = Depends(allow_admin),
+# ── Self-profile endpoints (static — must come before /{user_id} routes) ──────
+
+@app.get("/users/me", response_model=schemas.UtilisateurResponse, tags=["Users"])
+def get_me(
+    authorization: Optional[str] = Header(default=None),
     db: Session = Depends(get_db)
 ):
+    email = _email_from_bearer(authorization)
+    user = crud.get_user_by_email(db, email)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No local user record found for '{email}'."
+        )
+    return user
+
+
+@app.put("/users/me/profile", response_model=schemas.UtilisateurResponse, tags=["Users"])
+def update_profile(
+    data: schemas.UserProfileUpdate,
+    authorization: Optional[str] = Header(default=None),
+    db: Session = Depends(get_db)
+):
+    email = _email_from_bearer(authorization)
+    user = crud.get_user_by_email(db, email)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No local user record found for '{email}'."
+        )
+
+    update_data = data.model_dump(exclude_unset=True) if hasattr(data, 'model_dump') else data.dict(exclude_unset=True)
+    if not update_data:
+        return user
+
+    return crud.update_user_profile(db, user.idUtilisateur, data)
+
+
+# ── Admin routes (dynamic — must come after static /me routes) ────────────────
+
+@app.get("/users", response_model=List[schemas.UtilisateurResponse], tags=["Admin"])
+def get_users(db: Session = Depends(get_db)):
     return crud.get_users(db)
 
-@app.put("/users/{user_id}/role", response_model=schemas.UtilisateurResponse)
-def update_role(
-    user_id: int,
-    role: schemas.RoleUpdate,
-    current_user: models.Utilisateur = Depends(allow_admin),
-    db: Session = Depends(get_db)
-):
+
+@app.put("/users/{user_id}/role", response_model=schemas.UtilisateurResponse, tags=["Admin"])
+def update_role(user_id: int, role: schemas.RoleUpdate, db: Session = Depends(get_db)):
     user = crud.update_user_role_admin(db, user_id, role)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@app.delete("/users/{user_id}")
-def delete_user(
-    user_id: int,
-    current_user: models.Utilisateur = Depends(allow_admin),
-    db: Session = Depends(get_db)
-):
+
+@app.delete("/users/{user_id}", tags=["Admin"])
+def delete_user(user_id: int, db: Session = Depends(get_db)):
     if not crud.delete_user(db, user_id):
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}

@@ -54,8 +54,3 @@ export interface UtilisateurResponse extends UtilisateurBase {
   status?: string;
   horaires?: string;
 }
-
-export interface Token {
-  access_token: string;
-  token_type: string;
-}

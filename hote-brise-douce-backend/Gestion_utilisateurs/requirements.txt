@@ -2,8 +2,9 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 pymysql
-passlib[bcrypt]
-python-jose[cryptography]
 pydantic[email]
 python-multipart
 py-eureka-client
+bcrypt
+httpx
+python-dotenv

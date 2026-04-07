@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output, OnInit, inject } from '@angular/core';
 import { UserService } from '../../../core/services/user.service';
 import { UtilisateurResponse } from '../../../core/models/user.model';
+import { AuthService } from '../../../core/services/auth.service';
 
 export interface NavItem {
     id: string;
@@ -38,11 +39,17 @@ export class AdminSidebarComponent implements OnInit {
     currentUser: UtilisateurResponse | null = null;
     isProfileModalVisible = false;
 
-    ngOnInit() {
-        this.userService.getMe().subscribe(user => {
-            this.currentUser = user;
+private authService = inject(AuthService);
+
+
+ngOnInit() {
+    if (this.authService.isAuthenticated()) {
+        this.userService.getMe().subscribe({
+            next: (user) => { this.currentUser = user; },
+            error: (err) => { console.error('Could not load profile', err); }
         });
     }
+}
 
     openProfile() {
         this.isProfileModalVisible = true;

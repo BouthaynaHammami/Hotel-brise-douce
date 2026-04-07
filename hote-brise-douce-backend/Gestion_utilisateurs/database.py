@@ -1,16 +1,30 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# IMPORTANT: Change 'hotel_api_db' to your actual database name if different
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:@localhost:3306/hotel_db_utilisateur"
+# Load .env file if python-dotenv is installed (no-op otherwise)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+DB_USER     = os.getenv("DB_USER",     "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_HOST     = os.getenv("DB_HOST",     "localhost")
+DB_PORT     = os.getenv("DB_PORT",     "3306")
+DB_NAME     = os.getenv("DB_NAME",     "hotel_db_utilisateur")
+
+SQLALCHEMY_DATABASE_URL = (
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
-# Dependency to get a database session for each request
+
 def get_db():
     db = SessionLocal()
     try:

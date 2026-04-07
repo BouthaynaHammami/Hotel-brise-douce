@@ -14,15 +14,41 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
         </processorPath>
-        <module name="Gestion_nettoyage_maintenance" />
         <module name="Gestion_personnel" />
-        <module name="API_Gateway" />
         <module name="Gestion_chambres" />
         <module name="Discovery" />
-        <module name="Gestion_avis_reclamations" />
         <module name="Gestion_clients" />
+        <module name="Gestion_avis_reclamations" />
         <module name="Gestion_reservations" />
+      </profile>
+      <profile name="Annotation profile for ServerConfig" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
+        </processorPath>
+        <module name="ServerConfig" />
+      </profile>
+      <profile name="Annotation profile for API_Gateway" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
+        </processorPath>
+        <module name="API_Gateway" />
+      </profile>
+      <profile name="Annotation profile for Gestion_nettoyage_maintenance" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.24/lombok-1.18.24.jar" />
+        </processorPath>
+        <module name="Gestion_nettoyage_maintenance" />
       </profile>
     </annotationProcessing>
   </component>
@@ -37,6 +63,7 @@
       <module name="Gestion_nettoyage_maintenance" options="-parameters" />
       <module name="Gestion_personnel" options="-parameters" />
       <module name="Gestion_reservations" options="-parameters" />
+      <module name="ServerConfig" options="-parameters" />
     </option>
   </component>
 </project>

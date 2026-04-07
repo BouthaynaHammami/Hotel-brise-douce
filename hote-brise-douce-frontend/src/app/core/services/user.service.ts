@@ -30,8 +30,8 @@ export class UserService {
     return this.http.put<UtilisateurResponse>(`${this.apiUrl}/users/me/profile`, profileData);
   }
 
-  // EVERYONE: Fetch self profile using empty update (since GET /users/me is missing in python backend)
+  // EVERYONE: Fetch own profile
   getMe(): Observable<UtilisateurResponse> {
-    return this.http.put<UtilisateurResponse>(`${this.apiUrl}/users/me/profile`, {});
+    return this.http.get<UtilisateurResponse>(`${this.apiUrl}/users/me`);
   }
 }

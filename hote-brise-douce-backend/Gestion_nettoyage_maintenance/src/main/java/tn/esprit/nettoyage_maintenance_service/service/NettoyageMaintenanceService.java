@@ -23,11 +23,6 @@ public class NettoyageMaintenanceService {
     private final NettoyageMaintenanceRepository repository;
     private final UtilisateurClient utilisateurClient;
 
-    // ──────────────────────────────────────────────
-    // ADMIN — full CRUD
-    // ──────────────────────────────────────────────
-
-    /** Returns all interventions enriched with resolved personnel names. */
     public List<InterventionResponseDTO> getAll() {
         Map<Long, UtilisateurDTO> userMap = fetchUserMap();
         return repository.findAll().stream()
@@ -41,12 +36,6 @@ public class NettoyageMaintenanceService {
         return toResponse(intervention, userMap);
     }
 
-    /**
-     * Creates a new intervention.
-     * - status defaults to A_FAIRE if not provided
-     * - priorite defaults to NORMALE if not provided
-     * - validates that personnelId (if given) belongs to a PERSONNEL user
-     */
     public InterventionResponseDTO create(InterventionRequestDTO dto) {
         Map<Long, UtilisateurDTO> userMap = fetchUserMap();
 
@@ -70,10 +59,6 @@ public class NettoyageMaintenanceService {
         return toResponse(repository.save(intervention), userMap);
     }
 
-    /**
-     * Admin full-update of an intervention.
-     * Also re-validates personnelId if it changed.
-     */
     public InterventionResponseDTO update(Long id, InterventionRequestDTO dto) {
         NettoyageMaintenance existing = findOrThrow(id);
         Map<Long, UtilisateurDTO> userMap = fetchUserMap();
@@ -115,14 +100,6 @@ public class NettoyageMaintenanceService {
                 .collect(Collectors.toList());
     }
 
-    // ──────────────────────────────────────────────
-    // PERSONNEL — own interventions + status update
-    // ──────────────────────────────────────────────
-
-    /**
-     * Returns interventions assigned to a specific personnel member.
-     * Called by the personnel portal — they only see their own tasks.
-     */
     public List<InterventionResponseDTO> getByPersonnelId(Long personnelId) {
         Map<Long, UtilisateurDTO> userMap = fetchUserMap();
         return repository.findByPersonnelId(personnelId).stream()
@@ -130,10 +107,7 @@ public class NettoyageMaintenanceService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Personnel update ONLY the status of one of their assigned interventions.
-     * Prevents them from changing other fields.
-     */
+
     public InterventionResponseDTO updateStatus(Long id, Long personnelId, StatusIntervention newStatus) {
         NettoyageMaintenance intervention = findOrThrow(id);
 
@@ -146,39 +120,23 @@ public class NettoyageMaintenanceService {
         return toResponse(repository.save(intervention), userMap);
     }
 
-    // ──────────────────────────────────────────────
-    // PERSONNEL LIST (used by admin to populate dropdowns)
-    // ──────────────────────────────────────────────
-
-    /** Returns all users with role PERSONNEL from UTILISATEURS-SERVICE. */
     public List<UtilisateurDTO> getAllPersonnel() {
         return utilisateurClient.getAllUsers().stream()
                 .filter(u -> "PERSONNEL".equalsIgnoreCase(u.getRole()))
                 .collect(Collectors.toList());
     }
 
-    // ──────────────────────────────────────────────
-    // PRIVATE HELPERS
-    // ──────────────────────────────────────────────
-
     private NettoyageMaintenance findOrThrow(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Intervention not found with id: " + id));
     }
 
-    /**
-     * Fetches all users once and builds a lookup map by id.
-     * This avoids N+1 Feign calls when enriching a list of interventions.
-     */
+
     private Map<Long, UtilisateurDTO> fetchUserMap() {
         return utilisateurClient.getAllUsers().stream()
                 .collect(Collectors.toMap(UtilisateurDTO::getIdUtilisateur, u -> u));
     }
 
-    /**
-     * Validates that the given id refers to an existing PERSONNEL user.
-     * Reuses the already-fetched userMap to avoid a second Feign call.
-     */
     private void validatePersonnel(Long personnelId, Map<Long, UtilisateurDTO> userMap) {
         UtilisateurDTO user = userMap.get(personnelId);
         if (user == null || !"PERSONNEL".equalsIgnoreCase(user.getRole())) {
@@ -186,7 +144,6 @@ public class NettoyageMaintenanceService {
         }
     }
 
-    /** Maps an entity to the enriched response DTO using the pre-fetched user map. */
     private InterventionResponseDTO toResponse(NettoyageMaintenance i, Map<Long, UtilisateurDTO> userMap) {
         String personnelNom = null;
         if (i.getPersonnelId() != null) {

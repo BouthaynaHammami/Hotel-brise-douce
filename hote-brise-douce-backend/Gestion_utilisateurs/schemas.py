@@ -3,22 +3,20 @@ from datetime import datetime, date
 from typing import Optional
 from models import RoleEnum, TypeClientEnum
 
+
 class UtilisateurBase(BaseModel):
     nom: str
     prenom: str
     email: EmailStr
     telephone: str
 
-# 1. Registration input
+
+# ── Registration input ────────────────────────────────────────────────────────
 class UserRegister(UtilisateurBase):
     motDePasse: str
 
-# 2. JSON login body (replaces OAuth2PasswordRequestForm for gateway compatibility)
-class LoginRequest(BaseModel):
-    username: str  # holds the email
-    password: str
 
-# 3. User self-update
+# ── User self-update ──────────────────────────────────────────────────────────
 class UserProfileUpdate(BaseModel):
     nom: Optional[str] = None
     prenom: Optional[str] = None
@@ -26,7 +24,8 @@ class UserProfileUpdate(BaseModel):
     allergies: Optional[str] = None
     typeClient: Optional[TypeClientEnum] = None
 
-# 4. Admin-only role update
+
+# ── Admin-only role update ────────────────────────────────────────────────────
 class RoleUpdate(BaseModel):
     role: RoleEnum
     matricule: Optional[str] = None
@@ -34,7 +33,8 @@ class RoleUpdate(BaseModel):
     status: Optional[str] = None
     horaires: Optional[str] = None
 
-# 5. Response (password excluded)
+
+# ── Response (password always excluded) ──────────────────────────────────────
 class UtilisateurResponse(UtilisateurBase):
     idUtilisateur: int
     role: RoleEnum
@@ -55,6 +55,8 @@ class UtilisateurResponse(UtilisateurBase):
     class Config:
         from_attributes = True
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
+# NOTE: The Token schema has been removed.
+# Token issuance is now handled entirely by Keycloak.
+# Clients should POST to:
+#   http://localhost:8080/realms/Hotel_Realm/protocol/openid-connect/token
+# with grant_type=password, client_id, username, and password.
