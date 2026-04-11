@@ -40,3 +40,13 @@ class Utilisateur(Base):
     dateEmbauche = Column(Date, nullable=True)
     status = Column(String(50), nullable=True)
     horaires = Column(String(100), nullable=True)
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    idUtilisateur = Column(Integer, index=True)
+    titre = Column(String(100))
+    message = Column(String(255))
+    dateCreation = Column(DateTime, default=datetime.utcnow)
+    lue = Column(Boolean, default=False)

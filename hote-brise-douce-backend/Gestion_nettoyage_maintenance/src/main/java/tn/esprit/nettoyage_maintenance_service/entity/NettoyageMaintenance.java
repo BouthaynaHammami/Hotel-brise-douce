@@ -26,6 +26,14 @@ public class NettoyageMaintenance {
 
     private Integer chambreNumero;
 
+    /**
+     * Legacy FK column kept in DB. Nullable to avoid SQL constraint error.
+     * chambreNumero is used instead for static room reference.
+     */
+    @Column(name = "chambre_id")
+    private Long chambreId;
+
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

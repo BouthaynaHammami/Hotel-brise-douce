@@ -47,7 +47,11 @@ def _get_admin_token() -> str:
     if KEYCLOAK_ADMIN_SECRET:
         payload["client_secret"] = KEYCLOAK_ADMIN_SECRET
 
-    resp = httpx.post(_TOKEN_URL, data=payload, timeout=10)
+    try:
+        resp = httpx.post(_TOKEN_URL, data=payload, timeout=10)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Cannot connect to Keycloak token endpoint: {e}")
+        
     if resp.status_code != 200:
         raise HTTPException(
             status_code=502,

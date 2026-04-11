@@ -1,9 +1,0 @@
-.nav-link {
-    transition: color 0.2s;
-    color: white;
-    text-decoration: none;
-}
-
-.nav-link:hover {
-    color: #facc15;
-}

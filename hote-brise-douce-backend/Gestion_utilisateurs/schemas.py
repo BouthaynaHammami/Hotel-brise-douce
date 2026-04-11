@@ -60,3 +60,16 @@ class UtilisateurResponse(UtilisateurBase):
 # Clients should POST to:
 #   http://localhost:8080/realms/Hotel_Realm/protocol/openid-connect/token
 # with grant_type=password, client_id, username, and password.
+
+class NotificationBase(BaseModel):
+    idUtilisateur: int
+    titre: str
+    message: str
+
+class NotificationResponse(NotificationBase):
+    id: int
+    dateCreation: datetime
+    lue: bool
+
+    class Config:
+        from_attributes = True
