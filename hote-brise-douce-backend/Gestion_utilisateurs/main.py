@@ -9,22 +9,40 @@ from sqlalchemy.orm import Session
 
 import py_eureka_client.eureka_client as eureka_client
 
+import threading
+import traceback
 import models, schemas, crud, auth
+from sqlalchemy import text
 from database import engine, get_db
 from keycloak_client import mirror_user_in_keycloak
+from notification_consumer import start_consumer
 
 # ── DB bootstrap ─────────────────────────────────────────────────────────────
-models.Base.metadata.create_all(bind=engine)
+print(" [INIT] Attempting to initialize database...")
+try:
+    models.Base.metadata.create_all(bind=engine)
+    print(" [SUCCESS] Database tables created/verified successfully")
+except Exception as e:
+    print(f" [ERROR] Failed to connect to database: {e}")
+    print(" [ERROR] Please ensure:")
+    print("   1. MySQL server is running (typically on localhost:3306)")
+    print("   2. User 'root' exists (as configured in your .env)")
+    print("   3. Database 'hotel_db_utilisateur' exists or can be created")
+    print("   4. Check your .env file configuration")
+    print(" [WARNING] Continuing startup despite database connection error...")
 
 # ── Eureka config ─────────────────────────────────────────────────────────────
 EUREKA_SERVER = "http://localhost:8761/eureka/"
-APP_NAME      = "UTILISATEURS-SERVICE"
+APP_NAME = "UTILISATEURS-SERVICE"
 INSTANCE_PORT = 8000
-
 
 # ── App lifespan (startup / shutdown) ────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print(" [INIT] Lancement du thread consommateur de notifications...")
+    consumer_thread = threading.Thread(target=start_consumer, daemon=True)
+    consumer_thread.start()
+
     await eureka_client.init_async(
         eureka_server=EUREKA_SERVER,
         app_name=APP_NAME,
@@ -33,7 +51,6 @@ async def lifespan(app: FastAPI):
     )
     yield
     await eureka_client.stop_async()
-
 
 app = FastAPI(title="User Microservice – Hybrid Keycloak Mode", lifespan=lifespan)
 
@@ -45,7 +62,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # ── JWT helper ────────────────────────────────────────────────────────────────
 def _email_from_bearer(authorization: Optional[str]) -> str:
@@ -69,40 +85,56 @@ def _email_from_bearer(authorization: Optional[str]) -> str:
         )
     return email
 
-
 # ── Health / Info ─────────────────────────────────────────────────────────────
 @app.get("/health", tags=["Infra"])
-def health():
-    return {"status": "UP"}
+def health(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "UP", "database": "CONNECTED"}
+    except Exception as e:
+        return {"status": "DEGRADED", "database": f"ERROR: {str(e)}"}
 
 @app.get("/info", tags=["Infra"])
 def info():
     return {"app": APP_NAME}
 
-
 # ── Registration ──────────────────────────────────────────────────────────────
 @app.post("/register", response_model=schemas.UtilisateurResponse, tags=["Auth"])
 def register(user: schemas.UserRegister, db: Session = Depends(get_db)):
-    if crud.get_user_by_email(db, user.email):
-        raise HTTPException(status_code=400, detail="Email already registered")
-
-    db_user = crud.register_user(db, user)
-
     try:
-        mirror_user_in_keycloak(
-            email=user.email,
-            plain_password=user.motDePasse,
-            first_name=user.prenom,
-            last_name=user.nom,
-            role=db_user.role.value,
+        if crud.get_user_by_email(db, user.email):
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        db_user = crud.register_user(db, user)
+
+        try:
+            mirror_user_in_keycloak(
+                email=user.email,
+                plain_password=user.motDePasse,
+                first_name=user.prenom,
+                last_name=user.nom,
+                role=db_user.role.value,
+            )
+        except Exception as k_exc:
+            print(f" [WARNING] Keycloak mirror failed: {k_exc}")
+
+        return db_user
+    except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise exc
+        
+        error_details = traceback.format_exc()
+        print(f" [ERROR] Registration logic failed:\n{error_details}")
+        
+        # Log specifically for DB connection issues
+        if "pymysql.err.OperationalError" in error_details:
+             print(" [CRITICAL] Database connection error! Is MySQL running?")
+
+        # We return a 500 but with the actual error message in the detail
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Registration failed: {str(exc)}"
         )
-    except HTTPException as exc:
-        db.delete(db_user)
-        db.commit()
-        raise exc
-
-    return db_user
-
 
 # ── Admin setup (bootstrap only) ──────────────────────────────────────────────
 @app.post("/setup-initial-admin", tags=["Admin"])
@@ -122,15 +154,12 @@ def setup_admin(db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Admin created (admin@hotel.com / admin123)"}
 
-
 # ── Internal (service-to-service) ─────────────────────────────────────────────
 @app.get("/users/internal", response_model=List[schemas.UtilisateurResponse], tags=["Internal"])
 def get_users_internal(db: Session = Depends(get_db)):
     return crud.get_users(db)
 
-
-# ── Self-profile endpoints (static — must come before /{user_id} routes) ──────
-
+# ── Self-profile endpoints (static — before /{user_id}) ──────────────────────
 @app.get("/users/me", response_model=schemas.UtilisateurResponse, tags=["Users"])
 def get_me(
     authorization: Optional[str] = Header(default=None),
@@ -144,7 +173,6 @@ def get_me(
             detail=f"No local user record found for '{email}'."
         )
     return user
-
 
 @app.put("/users/me/profile", response_model=schemas.UtilisateurResponse, tags=["Users"])
 def update_profile(
@@ -166,13 +194,18 @@ def update_profile(
 
     return crud.update_user_profile(db, user.idUtilisateur, data)
 
-
-# ── Admin routes (dynamic — must come after static /me routes) ────────────────
-
+# ── Admin / dynamic routes ────────────────────────────────────────────────────
 @app.get("/users", response_model=List[schemas.UtilisateurResponse], tags=["Admin"])
 def get_users(db: Session = Depends(get_db)):
     return crud.get_users(db)
 
+# ✅ ROUTE MANQUANTE AJOUTÉE
+@app.get("/users/{user_id}", response_model=schemas.UtilisateurResponse, tags=["Users"])
+def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
+    user = crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 @app.put("/users/{user_id}/role", response_model=schemas.UtilisateurResponse, tags=["Admin"])
 def update_role(user_id: int, role: schemas.RoleUpdate, db: Session = Depends(get_db)):
@@ -181,9 +214,38 @@ def update_role(user_id: int, role: schemas.RoleUpdate, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+@app.put("/users/{user_id}/profile", response_model=schemas.UtilisateurResponse)
+def admin_update_user_profile(
+    user_id: int,
+    profile_data: schemas.UserProfileUpdate,
+    current_user: models.Utilisateur = Depends(auth.allow_admin),
+    db: Session = Depends(get_db)
+):
+    updated = crud.update_user_profile(db, user_id, profile_data)
+    if not updated:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated
 
 @app.delete("/users/{user_id}", tags=["Admin"])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     if not crud.delete_user(db, user_id):
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
+
+@app.get("/notifications/me", response_model=List[schemas.NotificationResponse])
+def get_my_notifications(
+    current_user: models.Utilisateur = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    return crud.get_user_notifications(db, current_user.idUtilisateur)
+
+@app.put("/notifications/{notif_id}/read")
+def mark_notification_read(
+    notif_id: int,
+    current_user: models.Utilisateur = Depends(auth.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    notif = crud.mark_notification_as_read(db, notif_id)
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return {"message": "Notification marked as read"}

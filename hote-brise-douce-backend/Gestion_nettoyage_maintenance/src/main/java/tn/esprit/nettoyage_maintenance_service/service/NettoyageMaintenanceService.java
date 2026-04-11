@@ -1,6 +1,7 @@
 package tn.esprit.nettoyage_maintenance_service.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tn.esprit.nettoyage_maintenance_service.dto.InterventionRequestDTO;
 import tn.esprit.nettoyage_maintenance_service.dto.InterventionResponseDTO;
@@ -10,18 +11,23 @@ import tn.esprit.nettoyage_maintenance_service.entity.Priorite;
 import tn.esprit.nettoyage_maintenance_service.entity.StatusIntervention;
 import tn.esprit.nettoyage_maintenance_service.entity.TypeIntervention;
 import tn.esprit.nettoyage_maintenance_service.client.UtilisateurClient;
+import tn.esprit.nettoyage_maintenance_service.client.ChambreClient;
+import tn.esprit.nettoyage_maintenance_service.dto.ChambreDTO;
 import tn.esprit.nettoyage_maintenance_service.repository.NettoyageMaintenanceRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NettoyageMaintenanceService {
 
     private final NettoyageMaintenanceRepository repository;
     private final UtilisateurClient utilisateurClient;
+    private final ChambreClient chambreClient;
 
     public List<InterventionResponseDTO> getAll() {
         Map<Long, UtilisateurDTO> userMap = fetchUserMap();
@@ -39,6 +45,8 @@ public class NettoyageMaintenanceService {
     public InterventionResponseDTO create(InterventionRequestDTO dto) {
         Map<Long, UtilisateurDTO> userMap = fetchUserMap();
 
+        Long resolvedChambreId = resolveChambreId(dto.getChambreNumero());
+
         if (dto.getPersonnelId() != null) {
             validatePersonnel(dto.getPersonnelId(), userMap);
         }
@@ -47,6 +55,7 @@ public class NettoyageMaintenanceService {
                 .typeIntervention(dto.getTypeIntervention())
                 .description(dto.getDescription())
                 .chambreNumero(dto.getChambreNumero())
+                .chambreId(resolvedChambreId)
                 .priorite(dto.getPriorite() != null ? dto.getPriorite() : Priorite.NORMALE)
                 .note(dto.getNote())
                 .datePlanification(dto.getDatePlanification())
@@ -63,6 +72,8 @@ public class NettoyageMaintenanceService {
         NettoyageMaintenance existing = findOrThrow(id);
         Map<Long, UtilisateurDTO> userMap = fetchUserMap();
 
+        Long resolvedChambreId = resolveChambreId(dto.getChambreNumero());
+
         if (dto.getPersonnelId() != null) {
             validatePersonnel(dto.getPersonnelId(), userMap);
         }
@@ -70,6 +81,7 @@ public class NettoyageMaintenanceService {
         existing.setTypeIntervention(dto.getTypeIntervention());
         existing.setDescription(dto.getDescription());
         existing.setChambreNumero(dto.getChambreNumero());
+        existing.setChambreId(resolvedChambreId);
         existing.setPriorite(dto.getPriorite() != null ? dto.getPriorite() : existing.getPriorite());
         existing.setNote(dto.getNote());
         existing.setDatePlanification(dto.getDatePlanification());
@@ -121,9 +133,14 @@ public class NettoyageMaintenanceService {
     }
 
     public List<UtilisateurDTO> getAllPersonnel() {
-        return utilisateurClient.getAllUsers().stream()
-                .filter(u -> "PERSONNEL".equalsIgnoreCase(u.getRole()))
-                .collect(Collectors.toList());
+        try {
+            return utilisateurClient.getAllUsers().stream()
+                    .filter(u -> "PERSONNEL".equalsIgnoreCase(u.getRole()))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("[NettoyageService] Impossible de recuperer le personnel : {}", e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     private NettoyageMaintenance findOrThrow(Long id) {
@@ -131,16 +148,52 @@ public class NettoyageMaintenanceService {
                 .orElseThrow(() -> new RuntimeException("Intervention not found with id: " + id));
     }
 
-
-    private Map<Long, UtilisateurDTO> fetchUserMap() {
-        return utilisateurClient.getAllUsers().stream()
-                .collect(Collectors.toMap(UtilisateurDTO::getIdUtilisateur, u -> u));
+    private Long resolveChambreId(Integer numero) {
+        if (numero == null) {
+            throw new RuntimeException("Le numero de chambre est obligatoire.");
+        }
+        try {
+            ChambreDTO chambre = chambreClient.getChambreByNumero(String.valueOf(numero));
+            if (chambre != null && chambre.getIdChambre() != null) {
+                return chambre.getIdChambre();
+            }
+        } catch (Exception e) {
+            log.error("[NettoyageService] Erreur lors de la communication avec le service chambres: {}", e.getMessage());
+        }
+        
+        throw new RuntimeException("Chambre introuvable avec le numero: " + numero + ". Veuillez verifier que la chambre existe et que le microservice Gestion_chambres est bien demarre.");
     }
 
+
+    /**
+     * Fetches all users from the utilisateurs-service via Feign.
+     * Returns an empty map if the service is unavailable — this prevents
+     * a cascading 500 error when creating/updating interventions.
+     */
+    private Map<Long, UtilisateurDTO> fetchUserMap() {
+        try {
+            List<UtilisateurDTO> users = utilisateurClient.getAllUsers();
+            return users.stream()
+                    .collect(Collectors.toMap(UtilisateurDTO::getIdUtilisateur, u -> u));
+        } catch (Exception e) {
+            log.warn("[NettoyageService] Impossible de joindre utilisateurs-service : {}. "
+                    + "Les noms du personnel ne seront pas resolus.", e.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * Validates that the given personnelId exists and has role PERSONNEL.
+     * Skips validation silently if the userMap is empty (service unavailable).
+     */
     private void validatePersonnel(Long personnelId, Map<Long, UtilisateurDTO> userMap) {
+        if (userMap.isEmpty()) {
+            log.warn("[NettoyageService] Validation du personnel ignoree : userMap vide (service indisponible).");
+            return;
+        }
         UtilisateurDTO user = userMap.get(personnelId);
         if (user == null || !"PERSONNEL".equalsIgnoreCase(user.getRole())) {
-            throw new RuntimeException("User " + personnelId + " not found or is not a PERSONNEL.");
+            throw new RuntimeException("Utilisateur " + personnelId + " introuvable ou n'est pas PERSONNEL.");
         }
     }
 

@@ -1,8 +1,0 @@
-<div class="bg-white border-b border-gray-100 px-8">
-    <div class="flex gap-8">
-        <button *ngFor="let tab of tabs" (click)="pageChange.emit(tab.id)" class="nav-tab py-4 text-sm"
-            [class.active]="activePage === tab.id" [class.text-gray-500]="activePage !== tab.id">
-            {{ tab.label }}
-        </button>
-    </div>
-</div>
