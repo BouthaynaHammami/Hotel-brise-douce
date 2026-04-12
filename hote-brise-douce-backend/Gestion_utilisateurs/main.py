@@ -1,13 +1,16 @@
 import base64
 import json
+import os
 from contextlib import asynccontextmanager
 from typing import List, Optional
+from datetime import datetime, timedelta
 
 from fastapi import FastAPI, Depends, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 import py_eureka_client.eureka_client as eureka_client
+import jwt
 
 import threading
 import traceback
@@ -32,9 +35,15 @@ except Exception as e:
     print(" [WARNING] Continuing startup despite database connection error...")
 
 # ── Eureka config ─────────────────────────────────────────────────────────────
-EUREKA_SERVER = "http://localhost:8761/eureka/"
+EUREKA_SERVER = os.getenv("EUREKA_SERVER", "http://eureka-server:8761/eureka/")
 APP_NAME = "UTILISATEURS-SERVICE"
-INSTANCE_PORT = 8000
+INSTANCE_PORT = int(os.getenv("INSTANCE_PORT", 8000))
+INSTANCE_HOST = os.getenv("INSTANCE_HOST", "utilisateurs")
+
+# ── JWT config (for local authentication) ─────────────────────────────────────
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-key-change-in-production")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = 24
 
 # ── App lifespan (startup / shutdown) ────────────────────────────────────────
 @asynccontextmanager
@@ -47,7 +56,7 @@ async def lifespan(app: FastAPI):
         eureka_server=EUREKA_SERVER,
         app_name=APP_NAME,
         instance_port=INSTANCE_PORT,
-        instance_host="localhost",
+        instance_host=INSTANCE_HOST,
     )
     yield
     await eureka_client.stop_async()
@@ -123,6 +132,52 @@ def debug_users_in_db(db: Session = Depends(get_db)):
 @app.get("/info", tags=["Infra"])
 def info():
     return {"app": APP_NAME}
+
+# ── JWT helper ────────────────────────────────────────────────────────────────
+def create_access_token(email: str, user_id: int) -> str:
+    """Create a JWT access token for local authentication"""
+    payload = {
+        "sub": email,
+        "email": email,
+        "user_id": user_id,
+        "exp": datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
+        "iat": datetime.utcnow()
+    }
+    encoded_jwt = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return encoded_jwt
+
+# ── Login endpoint (local JWT) ────────────────────────────────────────────────
+@app.post("/login", response_model=schemas.TokenResponse, tags=["Auth"])
+def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+    """Login endpoint that returns a JWT access token"""
+    try:
+        # Find user by email
+        user = crud.get_user_by_email(db, credentials.email)
+        if not user:
+            print(f" [WARNING] Login failed: user not found for email {credentials.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        # Verify password
+        if not auth.verify_password(credentials.password, user.motDePasse):
+            print(f" [WARNING] Login failed: invalid password for email {credentials.email}")
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        # Generate JWT token
+        access_token = create_access_token(user.email, user.idUtilisateur)
+        print(f" [SUCCESS] Login successful for user: {user.email}")
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f" [ERROR] Login failed: {exc}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(exc)}")
 
 # ── Registration ──────────────────────────────────────────────────────────────
 @app.post("/register", response_model=schemas.UtilisateurResponse, tags=["Auth"])

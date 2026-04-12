@@ -1,0 +1,15 @@
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\service\iservice\IReservationService.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\service\serviceimpl\ReservationServiceImpl.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\messaging\config\RabbitMQConfig.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\controller\TestConfigController.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\dto\ChambreDTO.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\client\ChambreClient.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\entity\Reservation.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\client\UtilisateurClient.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\dto\UtilisateurDTO.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\messaging\event\ReservationCreatedEvent.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\ReservationsApplication.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\controller\ReservationController.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\repository\ReservationRepository.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\messaging\producer\ReservationEventProducer.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_reservations\src\main\java\tn\esprit\reservations_service\dto\ReservationDetailDTO.java

@@ -8,3 +8,5 @@ py-eureka-client
 bcrypt
 httpx
 python-dotenv
+pika
+PyJWT

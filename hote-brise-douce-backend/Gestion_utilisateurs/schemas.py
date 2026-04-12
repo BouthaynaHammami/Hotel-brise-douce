@@ -11,6 +11,19 @@ class UtilisateurBase(BaseModel):
     telephone: str
 
 
+# ── Login input ───────────────────────────────────────────────────────────────
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+# ── Token response ────────────────────────────────────────────────────────────
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: Optional["UtilisateurResponse"] = None
+
+
 # ── Registration input ────────────────────────────────────────────────────────
 class UserRegister(UtilisateurBase):
     motDePasse: str

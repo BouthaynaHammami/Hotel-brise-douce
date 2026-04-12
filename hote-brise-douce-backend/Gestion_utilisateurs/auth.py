@@ -4,6 +4,7 @@ import base64
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
+import jwt
 
 import crud
 import models
@@ -28,15 +29,13 @@ def _email_from_bearer(authorization: Optional[str]) -> str:
 
     token = authorization.split(" ", 1)[1]
     try:
-        payload_b64 = token.split(".")[1]
-        # Ajouter le padding pour base64
-        payload_b64 += "=" * (4 - len(payload_b64) % 4)
-        payload = json.loads(base64.b64decode(payload_b64))
+        # Decode JWT payload without verifying signature.
+        payload = jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
     except Exception:
         raise HTTPException(status_code=401, detail="Impossible de lire le token")
 
-    # Le token Keycloak utilise "email" ou "preferred_username"
-    # Le token Custom Python utilise "sub"
+    # Le token Keycloak utilise souvent "email" ou "preferred_username".
+    # En dernier recours, on accepte "sub" si le token ne contient pas d'email.
     email = payload.get("email") or payload.get("preferred_username") or payload.get("sub")
     if not email:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Aucun email trouvé dans le token")

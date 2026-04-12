@@ -1,0 +1,14 @@
+tn\esprit\clients_service\messaging\consumer\FideliteConsumer.class
+tn\esprit\clients_service\dto\NotificationDTO.class
+tn\esprit\clients_service\messaging\event\ReservationCreatedEvent.class
+tn\esprit\clients_service\repository\FideliteRepository.class
+tn\esprit\clients_service\controller\FideliteController.class
+tn\esprit\clients_service\enums\Niveau.class
+tn\esprit\clients_service\entity\Fidelite.class
+tn\esprit\clients_service\entity\Fidelite$FideliteBuilder.class
+tn\esprit\clients_service\service\FideliteService$1.class
+tn\esprit\clients_service\ClientsApplication.class
+tn\esprit\clients_service\messaging\producer\NotificationProducer.class
+tn\esprit\clients_service\config\RabbitMQConfig.class
+tn\esprit\clients_service\dto\NotificationDTO$NotificationDTOBuilder.class
+tn\esprit\clients_service\service\FideliteService.class

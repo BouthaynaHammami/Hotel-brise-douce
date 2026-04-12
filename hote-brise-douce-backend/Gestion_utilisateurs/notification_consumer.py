@@ -1,6 +1,7 @@
 import pika
 import json
 import time
+import os
 from database import SessionLocal
 import models, crud
 
@@ -52,10 +53,23 @@ def start_consumer():
     """
     print(" [*] Initialisation du consommateur de notifications RabbitMQ...")
     
+    # Get RabbitMQ connection parameters from environment
+    RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "rabbitmq")
+    RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", 5672))
+    RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
+    RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD", "guest")
+    
     while True:
         try:
-            # We assume RabbitMQ is on localhost for this project setup
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', heartbeat=600))
+            # Connect to RabbitMQ with environment variables
+            connection = pika.BlockingConnection(
+                pika.ConnectionParameters(
+                    host=RABBITMQ_HOST,
+                    port=RABBITMQ_PORT,
+                    credentials=pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASSWORD),
+                    heartbeat=600
+                )
+            )
             channel = connection.channel()
 
             # Declare exchange and queue to ensure they exist (durable=True to match Java)

@@ -1,0 +1,11 @@
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\ClientsApplication.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\dto\NotificationDTO.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\messaging\consumer\FideliteConsumer.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\messaging\event\ReservationCreatedEvent.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\repository\FideliteRepository.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\enums\Niveau.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\messaging\producer\NotificationProducer.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\service\FideliteService.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\config\RabbitMQConfig.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\controller\FideliteController.java
+E:\Integration Microservice\devunity-hotel-brise-douce IntegrationFinales\hote-brise-douce-backend\Gestion_clients\src\main\java\tn\esprit\clients_service\entity\Fidelite.java

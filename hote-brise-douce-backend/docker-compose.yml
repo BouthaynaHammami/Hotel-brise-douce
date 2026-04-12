@@ -1,0 +1,274 @@
+services:
+
+ config-server:
+   build: ./ServerConfig
+   image: hbouthayna/configserver:1.0
+   container_name: ServerConfig
+   ports:
+     - "8888:8888"
+   depends_on:
+     eureka-server:
+       condition: service_healthy
+   environment:
+     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+   healthcheck:
+    test: [ "CMD", "curl", "-f", "http://config-server:8888/actuator/health" ]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+
+ avis_reclamations:
+   build: ./Gestion_avis_reclamations
+   image: hbouthayna/avis_reclamations:1.0
+   container_name: avis_reclamations
+   ports:
+    - "8082:8082"
+   depends_on:
+     mysqldb:
+       condition: service_healthy
+     config-server:
+       condition: service_healthy
+     eureka-server:
+       condition: service_healthy
+     rabbitmq:
+       condition: service_healthy
+   environment:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/avis_reclamations?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&max_allowed_packet=15728640
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+
+ chambres:
+   build: ./Gestion_chambres
+   image: hbouthayna/chambres:1.0
+   container_name: chambres
+   ports:
+      - "8083:8083"
+   depends_on:
+     mysqldb:
+       condition: service_healthy
+     config-server:
+       condition: service_healthy
+     eureka-server:
+       condition: service_healthy
+   environment:
+     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+     - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+     - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+     - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/chambres?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&max_allowed_packet=15728640
+     - SPRING_DATASOURCE_USERNAME=root
+     - SPRING_DATASOURCE_PASSWORD=root
+
+ clients:
+   build: ./Gestion_clients
+   image: hbouthayna/clients:1.0
+   container_name: clients
+   ports:
+     - "8084:8084"
+   depends_on:
+     mysqldb:
+       condition: service_healthy
+     config-server:
+       condition: service_healthy
+     eureka-server:
+       condition: service_healthy
+     rabbitmq:
+       condition: service_healthy
+   environment:
+     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+     - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+     - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+     - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/clients?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&max_allowed_packet=15728640
+     - SPRING_DATASOURCE_USERNAME=root
+     - SPRING_DATASOURCE_PASSWORD=root
+
+ nettoyage_maintenance:
+   build: ./Gestion_nettoyage_maintenance
+   image: hbouthayna/nettoyage_maintenance:1.0
+   container_name: nettoyage_maintenance
+   ports:
+     - "8085:8085"
+   depends_on:
+     mysqldb:
+       condition: service_healthy
+     config-server:
+       condition: service_healthy
+     eureka-server:
+       condition: service_healthy
+   environment:
+     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+     - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+     - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+     - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/nettoyage_maintenance?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&max_allowed_packet=15728640
+     - SPRING_DATASOURCE_USERNAME=root
+     - SPRING_DATASOURCE_PASSWORD=root
+
+ personnel:
+   build: ./Gestion_personnel
+   image: hbouthayna/personnel:1.0
+   container_name: personnel
+   ports:
+     - "8086:8086"
+   depends_on:
+     mysqldb:
+       condition: service_healthy
+     config-server:
+       condition: service_healthy
+     eureka-server:
+       condition: service_healthy
+     rabbitmq:
+       condition: service_healthy
+   environment:
+     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+     - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+     - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+     - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/personnel?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&max_allowed_packet=15728640
+     - SPRING_DATASOURCE_USERNAME=root
+     - SPRING_DATASOURCE_PASSWORD=root
+     - SPRING_RABBITMQ_HOST=rabbitmq
+     - SPRING_RABBITMQ_PORT=5672
+     - SPRING_RABBITMQ_USERNAME=guest
+     - SPRING_RABBITMQ_PASSWORD=guest
+
+ reservations:
+   build: ./Gestion_reservations
+   image: hbouthayna/reservations:1.0
+   container_name: reservations
+   ports:
+     - "8087:8087"
+   depends_on:
+     mysqldb:
+       condition: service_healthy
+     config-server:
+       condition: service_healthy
+     eureka-server:
+       condition: service_healthy
+     rabbitmq:
+       condition: service_healthy
+   environment:
+     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+     - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+     - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+     - SPRING_DATASOURCE_URL=jdbc:mysql://mysqldb:3306/reservations?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&max_allowed_packet=15728640
+     - SPRING_DATASOURCE_USERNAME=root
+     - SPRING_DATASOURCE_PASSWORD=root
+
+ utilisateurs:
+   build: ./Gestion_utilisateurs
+   image: hbouthayna/utilisateurs:1.0
+   container_name: utilisateurs
+   ports:
+     - "8000:8000"
+   depends_on:
+     mysqldb:
+       condition: service_healthy
+     eureka-server:
+       condition: service_healthy
+     rabbitmq:
+       condition: service_healthy
+   environment:
+     - EUREKA_SERVER=http://eureka-server:8761/eureka/
+     - INSTANCE_HOST=utilisateurs
+     - INSTANCE_PORT=8000
+     - DB_HOST=mysqldb
+     - DB_PORT=3306
+     - DB_USER=root
+     - DB_PASSWORD=root
+     - DB_NAME=hotel_db_user
+     - RABBITMQ_HOST=rabbitmq
+     - RABBITMQ_PORT=5672
+     - RABBITMQ_USER=guest
+     - RABBITMQ_PASSWORD=guest
+
+ eureka-server:
+   build: ./Discovery
+   image: hbouthayna/eureka:1.0
+   container_name: eureka
+   ports:
+     - "8761:8761"
+   environment:
+     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+   healthcheck:
+     test: [ "CMD", "curl", "-f", "http://eureka-server:8761/" ]
+     interval: 10s
+     timeout: 5s
+     retries: 5
+
+ API-gateway:
+   build: ./API_Gateway
+   image: hbouthayna/apigateway:1.0
+   container_name: gateway
+   ports:
+     - "8081:8081"
+   depends_on:
+     - eureka-server
+     - config-server
+     - avis_reclamations
+     - chambres
+     - clients
+     - nettoyage_maintenance
+     - personnel
+     - reservations
+     - utilisateurs
+     - mysqldb
+     - keycloak
+     - rabbitmq
+   environment:
+     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
+     - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+     - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/Hotel_Realm
+     - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/Hotel_Realm/protocol/openid-connect/certs
+
+ mysqldb:
+   image: mysql:8.0
+   container_name: db
+   ports:
+     - "3307:3306"
+   restart: unless-stopped
+   environment:
+     - MYSQL_ROOT_PASSWORD=root
+     - MYSQL_DATABASE=Hotel_DB
+   healthcheck:
+     test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot" ]
+     interval: 10s
+     timeout: 5s
+     retries: 10
+
+ keycloak:
+   image: quay.io/keycloak/keycloak:26.3.1
+   container_name: keycloak
+   restart: always
+   command: start-dev --http-port=8080
+   environment:
+     - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+     - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+     - KC_HOSTNAME_STRICT=false
+     - KC_HOSTNAME_PROTOCOL=http
+     - KC_HOSTNAME=keycloak
+     #- KC_HOSTNAME=localhost
+     - KEYCLOAK_ADMIN=admin
+     - KEYCLOAK_ADMIN_PASSWORD=admin
+   ports:
+     - "8080:8080"
+   volumes: 
+     - ./data/keycloak:/opt/keycloak/data  # volume local sur le systeme 
+     #- keycloak_data:/opt/keycloak/data   # volume Docker nommé 
+   depends_on:
+     - mysqldb
+
+ rabbitmq:
+   image: rabbitmq:3.13-management
+   container_name: rabbitmq
+   environment:
+     - RABBITMQ_DEFAULT_USER=guest
+     - RABBITMQ_DEFAULT_PASS=guest
+   ports:
+     - "5672:5672"
+     - "15672:15672"
+   healthcheck:
+     test: rabbitmq-diagnostics -q ping
+     interval: 30s
+     timeout: 10s
+     retries: 5

@@ -7,7 +7,7 @@ import tn.esprit.avis_reclamations_service.dto.UserDTO;
 
 import java.util.List;
 
-@FeignClient(name = "gestion-utilisateurs", url = "http://localhost:8000")
+@FeignClient(name = "utilisateurs", url = "http://utilisateurs:8000")
 public interface UserClient {
 
     @GetMapping("/users")

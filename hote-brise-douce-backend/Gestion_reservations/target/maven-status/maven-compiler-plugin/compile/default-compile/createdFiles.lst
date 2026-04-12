@@ -1,0 +1,15 @@
+tn\esprit\reservations_service\entity\Reservation.class
+tn\esprit\reservations_service\messaging\config\RabbitMQConfig.class
+tn\esprit\reservations_service\service\serviceimpl\ReservationServiceImpl.class
+tn\esprit\reservations_service\dto\ReservationDetailDTO.class
+tn\esprit\reservations_service\repository\ReservationRepository.class
+tn\esprit\reservations_service\dto\UtilisateurDTO.class
+tn\esprit\reservations_service\service\iservice\IReservationService.class
+tn\esprit\reservations_service\dto\ChambreDTO.class
+tn\esprit\reservations_service\controller\ReservationController.class
+tn\esprit\reservations_service\client\ChambreClient.class
+tn\esprit\reservations_service\messaging\event\ReservationCreatedEvent.class
+tn\esprit\reservations_service\ReservationsApplication.class
+tn\esprit\reservations_service\controller\TestConfigController.class
+tn\esprit\reservations_service\client\UtilisateurClient.class
+tn\esprit\reservations_service\messaging\producer\ReservationEventProducer.class
