@@ -15,6 +15,7 @@ import tn.esprit.nettoyage_maintenance_service.client.ChambreClient;
 import tn.esprit.nettoyage_maintenance_service.dto.ChambreDTO;
 import tn.esprit.nettoyage_maintenance_service.repository.NettoyageMaintenanceRepository;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +118,31 @@ public class NettoyageMaintenanceService {
         return repository.findByPersonnelId(personnelId).stream()
                 .map(i -> toResponse(i, userMap))
                 .collect(Collectors.toList());
+    }
+
+    public List<InterventionResponseDTO> getUrgentes() {
+        Map<Long, UtilisateurDTO> userMap = fetchUserMap();
+        return repository.findAll().stream()
+                .filter(i -> i.getPriorite() == Priorite.URGENTE && i.getStatus() == StatusIntervention.A_FAIRE)
+                .map(i -> toResponse(i, userMap))
+                .collect(Collectors.toList());
+    }
+
+    public List<InterventionResponseDTO> getEnRetard() {
+        Map<Long, UtilisateurDTO> userMap = fetchUserMap();
+        LocalDate today = LocalDate.now();
+        return repository.findAll().stream()
+                .filter(i -> i.getDateFin() != null && i.getDateFin().isBefore(today) && i.getStatus() != StatusIntervention.TERMINE)
+                .map(i -> toResponse(i, userMap))
+                .collect(Collectors.toList());
+    }
+
+    public InterventionResponseDTO terminerIntervention(Long id) {
+        NettoyageMaintenance intervention = findOrThrow(id);
+        intervention.setStatus(StatusIntervention.TERMINE);
+        intervention.setDateFin(LocalDate.now());
+        Map<Long, UtilisateurDTO> userMap = fetchUserMap();
+        return toResponse(repository.save(intervention), userMap);
     }
 
 

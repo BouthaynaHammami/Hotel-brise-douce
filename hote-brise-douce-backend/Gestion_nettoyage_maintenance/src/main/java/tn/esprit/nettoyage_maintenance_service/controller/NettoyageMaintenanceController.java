@@ -90,6 +90,21 @@ public class NettoyageMaintenanceController {
         return ResponseEntity.ok(service.updateStatus(id, personnelId, newStatus));
     }
 
+    @GetMapping("/urgentes")
+    public ResponseEntity<List<InterventionResponseDTO>> getUrgentes() {
+        return ResponseEntity.ok(service.getUrgentes());
+    }
+
+    @GetMapping("/en-retard")
+    public ResponseEntity<List<InterventionResponseDTO>> getEnRetard() {
+        return ResponseEntity.ok(service.getEnRetard());
+    }
+
+    @PutMapping("/{id}/terminer")
+    public ResponseEntity<InterventionResponseDTO> terminerIntervention(@PathVariable Long id) {
+        return ResponseEntity.ok(service.terminerIntervention(id));
+    }
+
     @GetMapping("/personnel")
     public ResponseEntity<List<UtilisateurDTO>> getAllPersonnel() {
         return ResponseEntity.ok(service.getAllPersonnel());
