@@ -173,16 +173,16 @@ npm start
 
 | Service | Rôle | Port |
 |---|---|---|
-| API Gateway | Point d'entrée unique | `8080` |
+| API Gateway | Point d'entrée unique | `8081` |
+| Service Avis | Feedback & avis | `8082` |
+| Service Chambres | Gestion des chambres | `8083` |
+| Service Clients | Gestion des clients | `8084` |
+| Service Maintenance | Suivi de maintenance | `8085` |
+| Service Personnel | Ressources humaines | `8086` |
+| Service Réservations | Gestion des réservations | `8087` |
+| Service Utilisateurs | Auth (Python) | `8000` |
 | Discovery (Eureka) | Registre des services | `8761` |
-| Config Server | Configuration centralisée | — |
-| Service Clients | Gestion des clients | — |
-| Service Chambres | Gestion des chambres | — |
-| Service Réservations | Gestion des réservations | — |
-| Service Maintenance | Suivi de maintenance | — |
-| Service Personnel | Ressources humaines | — |
-| Service Avis | Feedback & avis | — |
-| Service Utilisateurs | Auth (Python) | — |
+| Config Server | Configuration centralisée | `8888` |
 
 ### ⚙️ Lancement
 
