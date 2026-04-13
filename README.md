@@ -65,7 +65,7 @@
                    ▼
 ┌─────────────────────────────────────────────┐
 │              API Gateway                    │
-│              localhost:8080                 │
+│              localhost:8081                 │
 └────┬────┬────┬────┬────┬────┬────┬──────────┘
      │    │    │    │    │    │    │
      ▼    ▼    ▼    ▼    ▼    ▼    ▼
@@ -240,7 +240,7 @@ npm test      # Lancer les tests
 | Service | URL | Identifiants par défaut |
 |---|---|---|
 | Frontend | http://localhost:4200 | — |
-| API Gateway | http://localhost:8080 | — |
+| API Gateway | http://localhost:8081 | — |
 | Eureka Dashboard | http://localhost:8761 | — |
 | RabbitMQ Console | http://localhost:15672 | `guest` / `guest` |
 | Keycloak Admin | http://localhost:8080/auth | — |
@@ -275,7 +275,7 @@ npm test        # Lancer les tests unitaires
 
 1. Vérifier que l'**API Gateway** est démarrée : `docker-compose ps`
 2. Consulter les logs : `docker-compose logs api-gateway`
-3. S'assurer que le port `8080` n'est pas déjà utilisé
+3. S'assurer que le port `8081` n'est pas déjà utilisé
 
 </details>
 
@@ -356,7 +356,7 @@ Ce projet est développé dans un cadre **académique**.
 **📞 Support**
 
 ✔ Vérifier les logs Docker → `docker-compose logs -f`  
-✔ Tester les endpoints → http://localhost:8080  
+✔ Tester les endpoints → http://localhost:8081  
 ✔ Consulter les dashboards → [Eureka](http://localhost:8761) • [RabbitMQ](http://localhost:15672)
 
 </div>
