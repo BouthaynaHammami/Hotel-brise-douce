@@ -28,5 +28,7 @@ public class Conge {
     private StatutConge statut;
 
     private Long idEmploye;
+
+    private Double montantAvance;
 }
 

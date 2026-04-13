@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 pymysql
+cryptography
 pydantic[email]
 python-multipart
 py-eureka-client

@@ -19,4 +19,8 @@ public interface ICongeService {
     List<Conge> getCongesByEmploye(Long idEmploye);
 
     Conge traiterConge(Long idConge, StatutConge statut);
+
+    Conge requestAvancee(Long idConge, Double montantAvance);
+
+    Conge approveAvancee(Long idConge);
 }

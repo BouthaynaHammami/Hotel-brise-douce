@@ -21,6 +21,8 @@ def callback(ch, method, properties, body):
             titre_display = "Évolution de Tâche"
         elif notif_type == "LEAVE_STATUS":
             titre_display = "Mise à jour Congé"
+        elif notif_type == "LEAVE_ADVANCE":
+            titre_display = "Demande d'Avance"
         else:
             titre_display = "Notification"
 

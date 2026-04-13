@@ -1,7 +1,6 @@
 tn\esprit\personnel_service\Config\RabbitMQConfig.class
 tn\esprit\personnel_service\DTO\NotificationDTO$NotificationDTOBuilder.class
 tn\esprit\personnel_service\DTO\UtilisateurDTO.class
-tn\esprit\personnel_service\Entities\TypeShift.class
 tn\esprit\personnel_service\Repositories\CongeRepository.class
 tn\esprit\personnel_service\Controllers\ConfigTestController.class
 tn\esprit\personnel_service\Controllers\CongeController.class

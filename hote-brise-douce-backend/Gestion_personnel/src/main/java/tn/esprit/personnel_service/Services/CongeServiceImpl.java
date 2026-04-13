@@ -63,4 +63,51 @@ public class CongeServiceImpl implements ICongeService {
 
         return saved;
     }
+
+    @Override
+    public Conge requestAvancee(Long idConge, Double montantAvance) {
+        Conge conge = congeRepository.findById(idConge)
+                .orElseThrow(() -> new RuntimeException("Conge non trouvé avec l'id : " + idConge));
+        
+        // Verify montantAvance is positive
+        if (montantAvance == null || montantAvance <= 0) {
+            throw new RuntimeException("Montant d'avance doit être positif");
+        }
+        
+        conge.setMontantAvance(montantAvance);
+        Conge saved = congeRepository.save(conge);
+
+        // Send notification about advance request
+        notificationSender.sendLeaveAdvanceNotification(
+                saved.getIdEmploye(),
+                saved.getIdConge(),
+                montantAvance.toString(),
+                saved.getType());
+
+        return saved;
+    }
+
+    @Override
+    public Conge approveAvancee(Long idConge) {
+        Conge conge = congeRepository.findById(idConge)
+                .orElseThrow(() -> new RuntimeException("Conge non trouvé avec l'id : " + idConge));
+        
+        // Check if advance has been requested
+        if (conge.getMontantAvance() == null || conge.getMontantAvance() <= 0) {
+            throw new RuntimeException("Aucune demande d'avance pour ce congé");
+        }
+        
+        // Set status to APPROUVE (approved)
+        conge.setStatut(StatutConge.APPROUVE);
+        Conge saved = congeRepository.save(conge);
+
+        // Send notification about advance approval
+        notificationSender.sendLeaveAdvanceNotification(
+                saved.getIdEmploye(),
+                saved.getIdConge(),
+                "Avancée approuvée: " + saved.getMontantAvance(),
+                saved.getType());
+
+        return saved;
+    }
 }

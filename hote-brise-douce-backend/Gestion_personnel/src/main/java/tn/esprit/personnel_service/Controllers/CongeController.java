@@ -49,4 +49,14 @@ public class CongeController {
     public Conge traiterConge(@PathVariable Long idConge, @RequestParam StatutConge statut) {
         return congeService.traiterConge(idConge, statut);
     }
+
+    @PutMapping("/{idConge}/avancee")
+    public Conge requestAvancee(@PathVariable Long idConge, @RequestParam Double montantAvance) {
+        return congeService.requestAvancee(idConge, montantAvance);
+    }
+
+    @PutMapping("/{idConge}/avancee/approuver")
+    public Conge approveAvancee(@PathVariable Long idConge) {
+        return congeService.approveAvancee(idConge);
+    }
 }

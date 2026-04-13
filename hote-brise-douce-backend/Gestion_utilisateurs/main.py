@@ -36,7 +36,7 @@ except Exception as e:
 
 # ── Eureka config ─────────────────────────────────────────────────────────────
 EUREKA_SERVER = os.getenv("EUREKA_SERVER", "http://eureka-server:8761/eureka/")
-APP_NAME = "UTILISATEURS-SERVICE"
+APP_NAME = "utilisateurs-service"
 INSTANCE_PORT = int(os.getenv("INSTANCE_PORT", 8000))
 INSTANCE_HOST = os.getenv("INSTANCE_HOST", "utilisateurs")
 
@@ -250,11 +250,40 @@ def get_me(
         email = _email_from_bearer(authorization)
         user = crud.get_user_by_email(db, email)
         if not user:
-            print(f" [WARNING] No local user record for email: {email}")
-            raise HTTPException(
-                status_code=404,
-                detail=f"No local user record found for '{email}'. Please register first at /register."
-            )
+            print(f" [INFO] First login detected - auto-creating user from Keycloak for email: {email}")
+            # Extract Keycloak claims to get user info
+            token = authorization.split(" ", 1)[1] if authorization else ""
+            try:
+                payload_b64 = token.split(".")[1]
+                payload_b64 += "=" * (4 - len(payload_b64) % 4)
+                payload = json.loads(base64.b64decode(payload_b64))
+                
+                first_name = payload.get("given_name", "").strip() or "User"
+                last_name = payload.get("family_name", "").strip() or ""
+                name = payload.get("name", f"{first_name} {last_name}").strip()
+                
+                print(f" [DEBUG] Auto-creating user: email={email}, name={name}")
+                
+                # Auto-create user from Keycloak data
+                db_user = models.Utilisateur(
+                    email=email,
+                    nom=last_name or "Utilisateur",
+                    prenom=first_name,
+                    motDePasse=auth.get_password_hash(email),  # Generate from email
+                    telephone="N/A",
+                    role=models.RoleEnum.CLIENT,  # Default role
+                )
+                db.add(db_user)
+                db.commit()
+                db.refresh(db_user)
+                print(f" [SUCCESS] User auto-created: {email} (ID: {db_user.idUtilisateur})")
+                return db_user
+            except Exception as create_err:
+                print(f" [WARNING] Auto-create failed: {create_err}")
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No local user record found for '{email}'. Registration required."
+                )
         print(f" [DEBUG] Successfully loaded user: {email}")
         return user
     except HTTPException:

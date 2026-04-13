@@ -27,3 +27,4 @@ tn\esprit\avis_reclamations_service\AvisReclamationsApplication.class
 tn\esprit\avis_reclamations_service\entite\ReservationInfo.class
 tn\esprit\avis_reclamations_service\exception\DoublonException.class
 tn\esprit\avis_reclamations_service\config\RabbitMQConfig.class
+tn\esprit\avis_reclamations_service\config\FeignConfig.class
